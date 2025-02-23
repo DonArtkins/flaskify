@@ -46,12 +46,9 @@ Flask-RESTful
 Flask-CORS
 python-dotenv
 requests
-# Add these only if truly needed; consider smaller alternatives if possible
-# transformers
-# pillow
-# huggingface-hub
-# regex
-# tqdm
+transformers
+pillow
+huggingface-hub
 EOF
 
 # Create main app
