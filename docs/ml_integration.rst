@@ -1,13 +1,13 @@
 ML Integration
-=============
+==============
 
 Flaskify provides built-in support for machine learning model deployment and management using popular ML frameworks.
 
 HuggingFace Integration
-----------------------
+-----------------------
 
 Model Loading
-~~~~~~~~~~~~
+~~~~~~~~~~~~~
 Load pre-trained models from HuggingFace:
 
 .. code-block:: python
@@ -20,7 +20,7 @@ Load pre-trained models from HuggingFace:
     )
 
 Custom Training
-~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
 Train models on your data:
 
 .. code-block:: python
@@ -37,10 +37,10 @@ Train models on your data:
     trainer.train(train_dataset)
 
 Model Management
---------------
+----------------
 
 Version Control
-~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
 Track model versions:
 
 .. code-block:: python
@@ -55,10 +55,10 @@ Track model versions:
     )
 
 Inference API
------------
+-------------
 
 Deployment
-~~~~~~~~~
+~~~~~~~~~~
 Deploy models as API endpoints:
 
 .. code-block:: python
@@ -72,7 +72,7 @@ Deploy models as API endpoints:
     )
 
 Batch Processing
-~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 Handle batch predictions:
 
 .. code-block:: python
@@ -82,7 +82,7 @@ Handle batch predictions:
         return model.predict(inputs)
 
 Performance Optimization
-----------------------
+------------------------
 
 Caching
 ~~~~~~~

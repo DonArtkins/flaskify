@@ -1,14 +1,14 @@
 Changelog
-========
+=========
 
 All notable changes to Flaskify will be documented in this file.
 
 [Unreleased]
------------
+------------
 * Upcoming features and changes will be listed here
 
 [0.1.0] - 2025-02-23
-------------------
+--------------------
 
 Added
 ~~~~~
@@ -44,7 +44,7 @@ Changed
 * Security enhancements
 
 [0.0.1] - 2025-01-15
-------------------
+--------------------
 
 Added
 ~~~~~

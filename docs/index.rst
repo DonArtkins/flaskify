@@ -1,5 +1,5 @@
 Flaskify Documentation
-=====================
+======================
 
 .. image:: https://readthedocs.org/projects/flaskify/badge/?version=latest
     :target: https://flaskify.readthedocs.io/en/latest/?badge=latest
@@ -32,7 +32,7 @@ Features
 --------
 
 Core Features
-~~~~~~~~~~~~
+~~~~~~~~~~~~~
 * High-performance REST API
 * Rate Limiting & Security
 * CORS & Authentication
@@ -46,24 +46,24 @@ ML Support
 * Inference API
 
 Database Integration
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 * MongoDB Support
 * Firebase Integration
 * Supabase Ready
 * PostgreSQL Support
 
 DevOps Ready
-~~~~~~~~~~~
+~~~~~~~~~~~~
 * CI/CD Templates
 * Docker Support
 * Heroku Deploy
 * AWS Ready
 
 Getting Started
---------------
+---------------
 
 Installation
-~~~~~~~~~~~
+~~~~~~~~~~~~
 Using pip (Recommended):
 
 .. code-block:: bash
@@ -78,7 +78,7 @@ Using curl:
     curl -s https://raw.githubusercontent.com/DonArtkins/flaskify/master/flaskify-install.sh | bash
 
 Quick Start
-~~~~~~~~~~
+~~~~~~~~~~~
 
 1. Create a new project:
 
