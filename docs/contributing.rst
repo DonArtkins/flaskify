@@ -7,7 +7,7 @@ Getting Started
 ---------------
 
 Issue Reporting
-~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
 When reporting issues, please include:
 
 * A clear description of the issue
@@ -17,7 +17,7 @@ When reporting issues, please include:
 * Your operating system and Python version
 
 Contributing Process
--------------------
+--------------------
 
 1. Fork the repository
 2. Create a branch with descriptive name (e.g., ``feature/add-database-support``)
