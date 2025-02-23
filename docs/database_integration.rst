@@ -1,10 +1,10 @@
 Database Integration
-==================
+====================
 
 Flaskify provides seamless integration with multiple database systems, making it easy to persist and manage your application data.
 
 Supported Databases
------------------
+-------------------
 
 MongoDB
 ~~~~~~~
@@ -35,7 +35,7 @@ Integrate with Firebase Realtime Database:
     )
 
 PostgreSQL
-~~~~~~~~~
+~~~~~~~~~~
 Use PostgreSQL for relational data:
 
 .. code-block:: python
@@ -66,22 +66,22 @@ Connect to Supabase for modern database features:
     )
 
 Best Practices
-------------
+--------------
 
 Connection Management
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 * Use connection pooling for better performance
 * Implement proper error handling
 * Close connections when they're no longer needed
 
 Data Models
-~~~~~~~~~~
+~~~~~~~~~~~
 * Define clear data models
 * Use type hints
 * Implement data validation
 
 Security
-~~~~~~~
+~~~~~~~~
 * Never store credentials in code
 * Use environment variables
 * Implement proper access controls

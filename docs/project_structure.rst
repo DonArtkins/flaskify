@@ -1,5 +1,5 @@
 Project Structure
-===============
+=================
 
 Overview
 --------
@@ -25,7 +25,7 @@ The Flaskify project structure follows best practices for Flask applications:
     └── deployment/           # Deployment configs
 
 Directory Details
----------------
+-----------------
 
 app/
 ~~~~
@@ -36,25 +36,25 @@ api/
 Contains API endpoints organized by version.
 
 models/
-~~~~~~
+~~~~~~~
 Contains database models and ML model definitions.
 
 services/
-~~~~~~~~
+~~~~~~~~~
 Business logic and service layer implementation.
 
 utils/
-~~~~~
+~~~~~~
 Utility functions and helper classes.
 
 tests/
-~~~~~
+~~~~~~
 Test suite for the application.
 
 docs/
-~~~~
+~~~~~
 Project documentation.
 
 deployment/
-~~~~~~~~~~
+~~~~~~~~~~~
 Deployment configuration files.

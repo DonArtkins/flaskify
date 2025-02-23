@@ -1,13 +1,13 @@
 Contributing
-===========
+============
 
 Thank you for considering contributing to Flaskify! This document provides guidelines and instructions for contributing.
 
 Getting Started
--------------
+---------------
 
 Development Setup
-~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
 1. Fork the repository
 2. Clone your fork:
@@ -32,10 +32,10 @@ Development Setup
        pip install -r requirements-dev.txt
 
 Code Style
----------
+----------
 
 Guidelines
-~~~~~~~~~
+~~~~~~~~~~
 * Follow PEP 8 style guide
 * Use meaningful variable names
 * Write descriptive docstrings
@@ -43,10 +43,10 @@ Guidelines
 * Keep functions focused and small
 
 Testing
-------
+-------
 
 Running Tests
-~~~~~~~~~~~
+~~~~~~~~~~~~~
 Run the test suite:
 
 .. code-block:: bash
@@ -54,17 +54,17 @@ Run the test suite:
     pytest
 
 Adding Tests
-~~~~~~~~~~
+~~~~~~~~~~~~
 * Write tests for new features
 * Maintain test coverage
 * Use meaningful test names
 * Include edge cases
 
 Pull Requests
------------
+-------------
 
 Submission Process
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 1. Create a new branch
 2. Make your changes
 3. Write tests
@@ -72,7 +72,7 @@ Submission Process
 5. Submit PR
 
 PR Guidelines
-~~~~~~~~~~~
+~~~~~~~~~~~~~
 * Clear description
 * Reference related issues
 * Include test results
@@ -80,10 +80,10 @@ PR Guidelines
 * Follow code style
 
 Documentation
------------
+-------------
 
 Building Docs
-~~~~~~~~~~~
+~~~~~~~~~~~~~
 Generate documentation:
 
 .. code-block:: bash
@@ -92,7 +92,7 @@ Generate documentation:
     make html
 
 Writing Docs
-~~~~~~~~~~
+~~~~~~~~~~~~
 * Clear and concise
 * Include examples
 * Update relevant sections

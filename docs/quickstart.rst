@@ -1,8 +1,8 @@
 Quick Start
-==========
+===========
 
 Creating Your First API
-----------------------
+-----------------------
 
 1. Create a new project:
 

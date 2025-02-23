@@ -1,13 +1,13 @@
 Deployment
-=========
+==========
 
 This guide covers deploying your Flaskify application to various platforms and environments.
 
 Docker Deployment
----------------
+-----------------
 
 Basic Setup
-~~~~~~~~~~
+~~~~~~~~~~~
 Build and run with Docker:
 
 .. code-block:: bash
@@ -19,7 +19,7 @@ Build and run with Docker:
     docker run -p 5000:5000 my-flaskify-app
 
 Docker Compose
-~~~~~~~~~~~~
+~~~~~~~~~~~~~~
 Multi-container setup:
 
 .. code-block:: yaml
@@ -38,7 +38,7 @@ Multi-container setup:
           POSTGRES_PASSWORD: password
 
 Cloud Platforms
--------------
+---------------
 
 Heroku
 ~~~~~~
@@ -56,7 +56,7 @@ Deploy to Heroku:
     git push heroku main
 
 AWS Deployment
-~~~~~~~~~~~~
+~~~~~~~~~~~~~~
 Deploy on AWS:
 
 1. EC2 Setup:
@@ -81,24 +81,24 @@ Deploy on AWS:
        aws elbv2 create-load-balancer --name flaskify-lb
 
 Production Considerations
------------------------
+-------------------------
 
 Security
-~~~~~~~
+~~~~~~~~
 * Enable HTTPS
 * Configure firewalls
 * Set up WAF
 * Regular security updates
 
 Monitoring
-~~~~~~~~~
+~~~~~~~~~~
 * Set up logging
 * Configure metrics
 * Enable alerts
 * Performance monitoring
 
 Scaling
-~~~~~~
+~~~~~~~
 * Auto-scaling configuration
 * Load balancer setup
 * Database scaling
