@@ -20,20 +20,35 @@ Creating Your First API
        my-awesome-api/
        ├── app/
        │   ├── api/
-       │   │   └── v1/
-       │   ├── models/
-       │   ├── services/
+       │   │   └── v1/              # API version 1
+       │   │       ├── __init__.py  # Initializes the v1 API
+       │   │       └── routes.py    # Defines API endpoints
+       │   ├── config/
+       │   │   └── config.py        # Configuration settings
+       │   ├── models/             # Store your ML models here
+       │   │   ├── __init__.py
+       │   │   └── trained_models/ # Directory for saved models
+       │   ├── services/          # Business logic and model inference
+       │   │   └── __init__.py
        │   ├── utils/
-       │   └── config.py
-       ├── tests/
-       ├── docs/
-       └── requirements.txt
+       │   │   └── helpers.py      # Utility functions (e.g., rate limiting)
+       │   └── __init__.py         # Initializes the app package
+       ├── tests/                # Add your unit tests here
+       ├── docs/                 # API documentation
+       ├── venv/                 # Virtual environment
+       ├── .env                  # Environment variables
+       ├── .gitignore           # Git ignore rules
+       ├── LICENSE              # License information
+       ├── CONTRIBUTING.md      # Contribution guidelines
+       ├── README.md            # This file!
+       ├── requirements.txt     # Python package dependencies
+       └── run.py              # Main application entry point
 
 3. Running the API:
 
    .. code-block:: bash
 
-       python run.py
+       python3 run.py
 
 4. Testing the API:
 

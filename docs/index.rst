@@ -64,18 +64,17 @@ Getting Started
 
 Installation
 ~~~~~~~~~~~~
-Using pip (Recommended):
-
-.. code-block:: bash
-
-    pip install flaskify-generator
-
-Using curl:
+Using curl (Recommended):
 
 .. code-block:: bash
 
     # Linux/Mac
     curl -s https://raw.githubusercontent.com/DonArtkins/flaskify/master/flaskify-install.sh | bash
+
+.. code-block:: bash
+
+    # Windows
+    iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/DonArtkins/flaskify/master/flaskify-install.ps1'))
 
 Quick Start
 ~~~~~~~~~~~
@@ -84,27 +83,36 @@ Quick Start
 
    .. code-block:: bash
 
-       flaskify create my-awesome-api
-       cd my-awesome-api
+      flaskify create my-awesome-api
+
+   .. code-block:: bash
+
+      cd my-awesome-api
 
 2. Set up virtual environment:
 
    .. code-block:: bash
 
-       python -m venv venv
-       source venv/bin/activate  # Linux/Mac
-       .\venv\Scripts\activate   # Windows
+      python3 -m venv venv
+
+   .. code-block:: bash
+
+      source venv/bin/activate  # Linux/Mac
+
+   .. code-block:: bash
+
+      .\venv\Scripts\activate   # Windows
 
 3. Install dependencies:
 
    .. code-block:: bash
 
-       pip install -r requirements.txt
+      pip install -r requirements.txt
 
 4. Run the API:
 
    .. code-block:: bash
 
-       python run.py
+      python3 run.py
 
 Your API will be running at ``http://localhost:5000``
