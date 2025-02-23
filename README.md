@@ -7,7 +7,7 @@
 [![Python versions](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue)](https://www.python.org/downloads/)
 [![PyPI version](https://badge.fury.io/py/flaskify.svg)](https://badge.fury.io/py/flaskify)
 
-[DOCUMENTATION](https://flaskify.readthedocs.io/en/latest/index.html) | [CONTRIBUTING](CONTRIBUTING.md) | [LICENSE](LICENSE.md)
+[DOCUMENTATION](https://flaskify.readthedocs.io/en/latest/index.html) | [CONTRIBUTING](CONTRIBUTING.md) | [LICENSE](LICENSE)
 
 *A lightning-fast Flask REST API generator with built-in ML support, database integrations, and industry best practices* 🌟
 
