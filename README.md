@@ -7,7 +7,7 @@
 [![Python versions](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue)](https://www.python.org/downloads/)
 [![PyPI version](https://badge.fury.io/py/flaskify.svg)](https://badge.fury.io/py/flaskify)
 
-[Documentation](https://flaskify.readthedocs.io/) | [Quick Start](#quick-start) | [Examples](#examples) | [Contributing](CONTRIBUTING.md)
+[DOCUMENTATION](https://flaskify.readthedocs.io/en/latest/index.html) | [CONTRIBUTING](CONTRIBUTING.md) | [LICENSE](LICENSE.md)
 
 *A lightning-fast Flask REST API generator with built-in ML support, database integrations, and industry best practices* 🌟
 
@@ -24,7 +24,7 @@
 | 🚄 High-performance REST API | 🤖 HuggingFace Integration | 📊 MongoDB Support | 🔄 CI/CD Templates |
 | 🔒 Rate Limiting & Security | 🧠 Model Training Pipeline | 🔥 Firebase Integration | 🐳 Docker Support |
 | 🌐 CORS & Authentication | 📦 Model Management | ⚡ Supabase Ready | 🚀 Heroku Deploy |
-| 📝 Auto-documentation | 🎯 Inference API | 🐘 PostgreSQL Support | ☁️ AWS Ready |
+|  | 🎯 Inference API | 🐘 PostgreSQL Support |  |
 
 </div>
 
@@ -56,18 +56,13 @@
 
 ## 🚀 Installation
 
-### Using pip (Recommended)
-
-```bash
-pip install flaskify-generator
-```
-
-### Using curl
+### Using curl (Recommended)
 
 ```bash
 # Linux/Mac
 curl -s https://raw.githubusercontent.com/DonArtkins/flaskify/master/flaskify-install.sh | bash
-
+```
+```bash
 # Windows
 iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/DonArtkins/flaskify/master/flaskify-install.ps1'))
 ```
@@ -77,17 +72,20 @@ iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercon
 1. **Create a New Project**
    ```bash
    flaskify create my-awesome-api
+   ```
+   ```bash
    cd my-awesome-api
    ```
 
 2. **Set Up Virtual Environment**
    ```bash
    # Linux/Mac
-   python -m venv venv
+   python3 -m venv venv
    source venv/bin/activate
-
+   ```
+   ```bash
    # Windows
-   python -m venv venv
+   python3 -m venv venv
    .\venv\Scripts\activate
    ```
 
@@ -98,7 +96,7 @@ iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercon
 
 4. **Run the API**
    ```bash
-   python run.py
+   python3 run.py
    ```
 
    Your API is now running at `http://localhost:5000` 🎉
@@ -109,18 +107,29 @@ iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercon
 my-awesome-api/
 ├── app/
 │   ├── api/
-│   │   └── v1/                # API version 1
-│   │       ├── __init__.py
-│   │       └── routes.py
-│   ├── models/
-│   │   ├── ml/               # ML models
-│   │   └── database/         # Database models
-│   ├── services/             # Business logic
-│   ├── utils/                # Utilities
-│   └── config.py             # Configuration
-├── tests/                    # Test suite
-├── docs/                     # Documentation
-└── deployment/               # Deployment configs
+│   │   └── v1/              # API version 1
+│   │       ├── __init__.py  # Initializes the v1 API
+│   │       └── routes.py    # Defines API endpoints
+│   ├── config/
+│   │   └── config.py        # Configuration settings
+│   ├── models/             # Store your ML models here
+│   │   ├── __init__.py
+│   │   └── trained_models/ # Directory for saved models
+│   ├── services/          # Business logic and model inference
+│   │   └── __init__.py
+│   ├── utils/
+│   │   └── helpers.py      # Utility functions (e.g., rate limiting)
+│   └── __init__.py         # Initializes the app package
+├── tests/                # Add your unit tests here
+├── docs/                 # API documentation
+├── venv/                 # Virtual environment
+├── .env                  # Environment variables
+├── .gitignore           # Git ignore rules
+├── LICENSE              # License information
+├── CONTRIBUTING.md      # Contribution guidelines
+├── README.md            # This file!
+├── requirements.txt     # Python package dependencies
+└── run.py              # Main application entry point
 ```
 
 ## 🛠 API Development

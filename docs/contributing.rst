@@ -6,30 +6,25 @@ Thank you for considering contributing to Flaskify! This document provides guide
 Getting Started
 ---------------
 
-Development Setup
-~~~~~~~~~~~~~~~~~
+Issue Reporting
+~~~~~~~~~~~~~~
+When reporting issues, please include:
+
+* A clear description of the issue
+* Steps to reproduce the issue
+* The expected behavior
+* The actual behavior
+* Your operating system and Python version
+
+Contributing Process
+-------------------
 
 1. Fork the repository
-2. Clone your fork:
-
-   .. code-block:: bash
-
-       git clone https://github.com/your-username/flaskify.git
-       cd flaskify
-
-3. Create a virtual environment:
-
-   .. code-block:: bash
-
-       python -m venv venv
-       source venv/bin/activate  # Linux/Mac
-       .\venv\Scripts\activate   # Windows
-
-4. Install development dependencies:
-
-   .. code-block:: bash
-
-       pip install -r requirements-dev.txt
+2. Create a branch with descriptive name (e.g., ``feature/add-database-support``)
+3. Make your changes following the code style guidelines
+4. Add tests for your changes
+5. Commit with clear messages
+6. Submit PR to ``main`` branch
 
 Code Style
 ----------
@@ -63,14 +58,6 @@ Adding Tests
 Pull Requests
 -------------
 
-Submission Process
-~~~~~~~~~~~~~~~~~~
-1. Create a new branch
-2. Make your changes
-3. Write tests
-4. Update documentation
-5. Submit PR
-
 PR Guidelines
 ~~~~~~~~~~~~~
 * Clear description
@@ -78,22 +65,4 @@ PR Guidelines
 * Include test results
 * Update changelog
 * Follow code style
-
-Documentation
--------------
-
-Building Docs
-~~~~~~~~~~~~~
-Generate documentation:
-
-.. code-block:: bash
-
-    cd docs
-    make html
-
-Writing Docs
-~~~~~~~~~~~~
-* Clear and concise
-* Include examples
-* Update relevant sections
-* Check for typos
+* Address maintainer feedback
