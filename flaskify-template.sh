@@ -399,29 +399,12 @@ A minimalist, high-performance Flask REST API template with built-in rate limiti
 - 🔄 Version control ready (Git pre-initialized)
 - 📦 Minimal dependencies
 
-## Installation
-
-### Linux/Mac
-
-\`\`\`bash
-# Create new project
-./your_script_name.sh my-api
-\`\`\`
-
-### Windows
-
-\`\`\`powershell
-# Create new project
-.\your_script_name.sh my-api
-\`\`\`
-
 ## Quick Start
 
 1.  **Create a New Project:**
 
     \`\`\`bash
-    ./your_script_name.sh my-api
-    cd my-api
+    cd $PROJECT_NAME
     \`\`\`
 
 2.  **Activate the Virtual Environment:**
@@ -429,7 +412,9 @@ A minimalist, high-performance Flask REST API template with built-in rate limiti
     \`\`\`bash
     # Linux/Mac
     source venv/bin/activate
+    \`\`\`
 
+    \`\`\`bash
     # Windows
     .\\venv\\Scripts\\activate
     \`\`\`
@@ -443,7 +428,7 @@ A minimalist, high-performance Flask REST API template with built-in rate limiti
 4.  **Run the API:**
 
     \`\`\`bash
-    python run.py
+    python3 run.py
     \`\`\`
 
     The API will start in debug mode.  You'll see output in your terminal.
@@ -453,7 +438,7 @@ A minimalist, high-performance Flask REST API template with built-in rate limiti
 The project follows a clear structure:
 
 \`\`\`
-my-api/
+$PROJECT_NAME/
 ├── app/
 │   ├── api/
 │   │   └── v1/              # API version 1
@@ -512,7 +497,7 @@ Flaskify is designed for easy deployment.  Here are some options:
 4.  **Create a Heroku App:**
 
     \`\`\`bash
-    heroku create my-api-name  # Replace with a unique name
+    heroku create $PROJECT_NAME-name  # Replace with a unique name
     \`\`\`
 
 5.  **Set the `SECRET_KEY` Environment Variable:**
@@ -557,13 +542,13 @@ Flaskify is designed for easy deployment.  Here are some options:
 3.  **Build the Docker Image:**
 
     \`\`\`bash
-    docker build -t my-api .
+    docker build -t $PROJECT_NAME .
     \`\`\`
 
 4.  **Run the Docker Container:**
 
     \`\`\`bash
-    docker run -p 5000:5000 -e SECRET_KEY=$(python -c "import secrets; print(secrets.token_hex(32))") my-api
+    docker run -p 5000:5000 -e SECRET_KEY=$(python -c "import secrets; print(secrets.token_hex(32))") $PROJECT_NAME
     \`\`\`
 
     *   `-p 5000:5000`: Maps port 5000 on your host to port 5000 in the container.
