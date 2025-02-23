@@ -22,7 +22,6 @@ A lightning-fast Flask REST API generator with built-in ML support, database int
    installation
    quickstart
    project_structure
-   api_development
    database_integration
    ml_integration
    deployment
@@ -40,14 +39,14 @@ Core Features
 * Auto-documentation
 
 ML Support
-~~~~~~~~~
+~~~~~~~~~~
 * HuggingFace Integration
 * Model Training Pipeline
 * Model Management
 * Inference API
 
 Database Integration
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 * MongoDB Support
 * Firebase Integration
 * Supabase Ready
@@ -65,7 +64,6 @@ Getting Started
 
 Installation
 ~~~~~~~~~~~
-
 Using pip (Recommended):
 
 .. code-block:: bash
