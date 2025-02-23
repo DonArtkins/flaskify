@@ -2,7 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
 
-project = 'flaskify'
+project = 'Flaskify'
 copyright = '2025'
 author = 'DonArtkins'
 
