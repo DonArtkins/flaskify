@@ -18,7 +18,8 @@ A minimalist, high-performance Flask REST API Template with built-in rate limiti
 ```bash
 # Install Flaskify CLI
 curl -s https://raw.githubusercontent.com/DonArtkins/flaskify/master/flaskify-install.sh | bash
-
+```
+```bash
 # Create new project
 flaskify create my-api
 ```
@@ -28,7 +29,8 @@ flaskify create my-api
 ```powershell
 # Install Flaskify CLI
 iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/DonArtkins/flaskify/master/flaskify-install.sh'))
-
+```
+```bash
 # Create new project
 flaskify create my-api
 ```
@@ -39,6 +41,8 @@ flaskify create my-api
 
     ```bash
     flaskify create my-api
+    ```
+    ```bash
     cd my-api
     ```
 
@@ -47,9 +51,10 @@ flaskify create my-api
     ```bash
     # Linux/Mac
     source venv/bin/activate
-
+    ```
+    ```bash
     # Windows
-    .\\venv\\Scripts\\activate
+    .\venv\Scripts\activate
     ```
 
 3.  **Install Dependencies:**

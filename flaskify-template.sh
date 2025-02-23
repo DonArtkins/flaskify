@@ -204,31 +204,32 @@ This is a Flask REST API project generated using Flaskify.  It provides a solid 
 
 1.  **Navigate to the Project Directory:**
 
-    \`\`\`bash
+    ```bash
     cd [PROJECT_NAME]
-    \`\`\`
+    ```
 
 2.  **Activate the Virtual Environment:**
 
-    \`\`\`bash
+    ```bash
     # Linux/Mac
     source venv/bin/activate
-
+    ```
+    ```bash
     # Windows
-    .\\venv\\Scripts\\activate
-    \`\`\`
+    .\venv\Scripts\activate
+    ```
 
 3.  **Install Dependencies:**
 
-    \`\`\`bash
+    ```bash
     pip install -r requirements.txt
-    \`\`\`
+    ```
 
 4.  **Run the API (Development):**
 
-    \`\`\`bash
+    ```bash
     python run.py
-    \`\`\`
+    ```
 
     The API will start in debug mode at `http://localhost:5000`.  You'll see output in your terminal.
 
@@ -245,7 +246,7 @@ To add your own API endpoints, follow these steps:
 
 1.  **Create a Resource:** In `app/api/v1/routes.py`, create a new resource class that inherits from `flask_restful.Resource`.
 
-    \`\`\`python
+    ```python
     from flask_restful import Resource
     from app.api.v1 import api
 
@@ -259,13 +260,13 @@ To add your own API endpoints, follow these steps:
             data = request.get_json() # Get the data from the request body
             # Do something with the data
             return {'message': 'Resource created!'}, 201
-    \`\`\`
+    ```
 
 2.  **Define Routes:**  Register your resource with the API using `api.add_resource()`.
 
-    \`\`\`python
+    ```python
     api.add_resource(MyResource, '/myresource')
-    \`\`\`
+    ```
 
     Now you can access your new endpoint at `http://localhost:5000/api/v1/myresource`.
 
@@ -275,13 +276,13 @@ API configuration is managed through environment variables in the `.env` file.
 
 Example:
 
-\`\`\`
+```
 SECRET_KEY=your-super-secret-key
 API_TITLE=[PROJECT_NAME] API
 API_VERSION=v1
 RATE_LIMIT=1000
 RATE_LIMIT_PERIOD=15
-\`\`\`
+```
 
 **Important:**
 
@@ -298,10 +299,10 @@ This project uses API versioning through URL prefixes.  The current version is `
 2.  **Define v2 Routes:** In `app/api/v2/routes.py`, define your v2 API endpoints.
 3.  **Register the Blueprint:**  In `app/__init__.py`, register the v2 blueprint with a new URL prefix.
 
-    \`\`\`python
+    ```python
     from app.api.v2 import bp as api_v2
     app.register_blueprint(api_v2, url_prefix='/api/v2')
-    \`\`\`
+    ```
 
 Now you can access the v2 endpoints using URLs like `http://localhost:5000/api/v2/myresource`.
 
