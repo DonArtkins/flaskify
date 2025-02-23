@@ -6,6 +6,11 @@ project = 'Flaskify'
 copyright = '2025'
 author = 'DonArtkins'
 
+# The short X.Y version
+version = '0.1'
+# The full version, including alpha/beta/rc tags
+release = '0.1.0'
+
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
@@ -17,3 +22,6 @@ extensions = [
 ]
 
 html_theme = 'sphinx_rtd_theme'
+
+# Required for EPUB output
+epub_show_urls = 'footnote'
