@@ -401,7 +401,7 @@ A minimalist, high-performance Flask REST API template with built-in rate limiti
 
 ## Quick Start
 
-1.  **Create a New Project:**
+1.  **Enter Project Directory:**
 
     \`\`\`bash
     cd $PROJECT_NAME
@@ -497,7 +497,7 @@ Flaskify is designed for easy deployment.  Here are some options:
 4.  **Create a Heroku App:**
 
     \`\`\`bash
-    heroku create $PROJECT_NAME-name  # Replace with a unique name
+    heroku create $PROJECT_NAME  # Replace with a unique name
     \`\`\`
 
 5.  **Set the `SECRET_KEY` Environment Variable:**
@@ -556,7 +556,7 @@ Flaskify is designed for easy deployment.  Here are some options:
 
 ### Railway
 
-1.  **Create a Railway Account:**  If you don't have one, sign up at [https://railway.app/](https://railway.app/).
+1.  **Create a Railway Account:**  If you don't have one, sign up at [https://railway.app/](https://www.railway.app/).
 
 2.  **Install the Railway CLI:**  Follow the instructions on the Railway website.
 
@@ -586,6 +586,177 @@ The API includes basic rate limiting to prevent abuse.
 
 *   **Default:** 1000 requests per 15 minutes.
 *   **Configuration:**  Adjust the `RATE_LIMIT` and `RATE_LIMIT_PERIOD` environment variables in your `.env` file.
+
+## Making API Requests (Example with Postman)
+
+This section provides examples on how to interact with the API using Postman.
+
+1.  **Download and Install Postman:** If you don't have it already, download and install Postman from [https://www.postman.com/](https://www.postman.com/).
+
+2.  **Import the API endpoints to Postman:**  Download a postman collection from this url: (create it manually)
+
+3. **Send a GET Request to the Health Check Endpoint:**
+
+    *   **URL:** `http://localhost:5000/api/v1/health`
+    *   **Method:** `GET`
+    *   **Headers:**  None required for this endpoint.
+    *   **Body:** None required for this endpoint.
+    *   **Expected Response:**
+
+        ```json
+        {
+            "status": "healthy",
+            "version": "v1",
+            "timestamp": "2023-11-20T12:00:00.000000",
+            "environment": "development"
+        }
+        ```
+
+4.  **Send a GET Request to the Hello World Endpoint:**
+
+    *   **URL:** `http://localhost:5000/api/v1/hello`
+    *   **Method:** `GET`
+    *   **Headers:** None required for this endpoint.
+    *   **Body:** None required for this endpoint.
+    *   **Expected Response:**
+
+        ```json
+        {
+            "message": "Hello, World!",
+            "timestamp": "2023-11-20T12:00:00.000000"
+        }
+        ```
+
+5.  **Send a POST Request to the Hello World Endpoint:**
+
+    *   **URL:** `http://localhost:5000/api/v1/hello`
+    *   **Method:** `POST`
+    *   **Headers:** `Content-Type: application/json`
+    *   **Body:** (Example)
+
+        ```json
+        {
+            "name": "John Doe",
+            "age": 30
+        }
+        ```
+
+    *   **Expected Response:**
+
+        ```json
+        {
+            "message": "Received: {'name': 'John Doe', 'age': 30}",
+            "timestamp": "2023-11-20T12:00:00.000000"
+        }
+        ```
+## Adding Your Own API Endpoints
+
+Here's how to add your own custom API endpoints, for example, to integrate a machine learning model:
+
+1. **Create a New Resource:**
+
+    * Open the `app/api/v1/routes.py` file.
+    * Create a new class that inherits from `Resource`.  This class will represent your API endpoint.
+
+    ```python
+    from flask import request
+    from flask_restful import Resource
+    from app.api.v1 import api
+    from app.utils.helpers import rate_limit
+
+    class MyModelEndpoint(Resource):
+        @rate_limit
+        def post(self):
+            """Endpoint to make predictions using my model."""
+            data = request.get_json()
+            # Load your model
+            # model = load_my_model()
+
+            # Example process
+            # prediction = model.predict([data['feature1'], data['feature2']])
+
+            # Replace with your actual model prediction logic
+            prediction = f"Simulated prediction with input: {data}"
+
+            return {'prediction': prediction}, 200
+
+    # Register the new resource
+    api.add_resource(MyModelEndpoint, '/predict')
+    ```
+
+2.  **Implement the HTTP Methods (GET, POST, PUT, DELETE):**
+    Within your resource class, define methods for each HTTP verb you want to support (e.g., `get()`, `post()`, `put()`, `delete()`).  These methods will handle the incoming requests.
+
+3.  **Access Request Data:**
+    Use the `flask.request` object to access data sent in the request (e.g., JSON payloads, query parameters).
+
+    ```python
+    data = request.get_json() # For JSON data in the body
+    args = request.args        # For query parameters
+    ```
+
+4.  **Register the Resource:**
+    Use the `api.add_resource()` method to register your resource with the Flask-RESTful API.  Specify the URL endpoint for your resource.
+
+    ```python
+    api.add_resource(MyModelEndpoint, '/my_endpoint')
+    ```
+
+5. **Place your model files**
+    Place your model files inside the main directory, for instance `models/` and then make import on the routes that you want to implement your model.
+
+    ```python
+    from app.api.v1 import api
+    from models.yourModel import YourModelClass
+
+    # Load your model
+    model = YourModelClass()
+    ```
+
+## Training a new model
+
+This is a more involved task, but here's the general idea:
+
+1.  **Create a training script:**  Write a separate Python script (e.g., `train_model.py`) that loads your data, trains your model, and saves the trained model to a file (e.g., as a `.pkl` file using `pickle`). Place this script in root directory.
+
+    ```python
+    # train_model.py
+    import pickle
+    # Import Libraries for model training
+    # ...
+
+    # Load your training data
+    # X_train, y_train = load_data()
+
+    # Create and train your model
+    # model = MyModel()
+    # model.fit(X_train, y_train)
+
+    # Save the trained model
+    # pickle.dump(model, open('my_model.pkl', 'wb'))
+    ```
+
+2.  **Run the training script:**  Execute the `train_model.py` script from your terminal:
+
+    ```bash
+    python3 train_model.py
+    ```
+
+    This will train your model and save it to a file.
+
+3.  **Load the model in your API endpoint:**  In your `routes.py` file, load the trained model from the file when the API starts or within the API endpoint function.
+
+    ```python
+    import pickle
+    from flask_restful import Resource
+    from app.api.v1 import api
+    # Load the trained model
+    # model = pickle.load(open('my_model.pkl', 'rb'))
+    ```
+
+## Adding more dependencies
+
+If you want to add a new dependencie, you can easily modify the `requirements.txt` with your dependency, and then run `pip install -r requirements.txt`.
 
 ## Best Practices
 
@@ -685,7 +856,7 @@ if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
 else
     echo "2. source venv/bin/activate"
 fi
-echo "3. python run.py"
+echo "3. python3 run.py"
 echo ""
 echo "Your API will be available at: http://localhost:5000"
 echo "API endpoints:"
