@@ -84,6 +84,8 @@ directories=(
     "app/api/v1"
     "app/utils"
     "app/config"
+    "app/models"
+    "app/services"
     "tests"
     "docs"
 )
@@ -102,6 +104,8 @@ touch_files=(
     "app/utils/helpers.py"
     "app/config/__init__.py"
     "app/config/config.py"
+    "app/models/__init__.py"
+    "app/services/__init__.py"
     ".env"
     ".gitignore"
     "README.md"
@@ -182,6 +186,7 @@ class Config:
     RATE_LIMIT_PERIOD = timedelta(minutes=int(os.getenv('RATE_LIMIT_PERIOD', 15)))
     DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() in ('true', '1', 't')
     TESTING = False
+    MODEL_PATH = os.getenv('MODEL_PATH', 'app/models/trained_models')
 
 class DevelopmentConfig(Config):
     """Development configuration."""
@@ -363,6 +368,15 @@ htmlcov/
 # Logs
 *.log
 logs/
+
+# Model files
+*.pkl
+*.h5
+*.pt
+*.pth
+*.onnx
+*.pb
+trained_models/
 EOF
 
 # Create .env template
@@ -380,6 +394,9 @@ API_VERSION=v1
 RATE_LIMIT=1000
 RATE_LIMIT_PERIOD=15
 
+# Model Configuration
+MODEL_PATH=app/models/trained_models
+
 # Security
 SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
 EOF
@@ -388,7 +405,7 @@ EOF
 cat > README.md << EOF
 # $PROJECT_NAME 🚀
 
-A minimalist, high-performance Flask REST API template with built-in rate limiting and best practices.  This is a great starting point for building robust APIs.
+A minimalist, high-performance Flask REST API template with built-in rate limiting and best practices. This is a great starting point for building robust APIs.
 
 ## Features
 
@@ -398,16 +415,17 @@ A minimalist, high-performance Flask REST API template with built-in rate limiti
 - 📝 Clear project structure
 - 🔄 Version control ready (Git pre-initialized)
 - 📦 Minimal dependencies
+- 🤖 ML model integration ready
 
 ## Quick Start
 
-1.  **Enter Project Directory:**
+1. **Enter Project Directory:**
 
     \`\`\`bash
     cd $PROJECT_NAME
     \`\`\`
 
-2.  **Activate the Virtual Environment:**
+2. **Activate the Virtual Environment:**
 
     \`\`\`bash
     # Linux/Mac
@@ -419,19 +437,19 @@ A minimalist, high-performance Flask REST API template with built-in rate limiti
     .\\venv\\Scripts\\activate
     \`\`\`
 
-3.  **Install Dependencies:**
+3. **Install Dependencies:**
 
     \`\`\`bash
     pip install -r requirements.txt
     \`\`\`
 
-4.  **Run the API:**
+4. **Run the API:**
 
     \`\`\`bash
     python3 run.py
     \`\`\`
 
-    The API will start in debug mode.  You'll see output in your terminal.
+    The API will start in debug mode. You'll see output in your terminal.
 
 ## API Structure
 
@@ -446,338 +464,224 @@ $PROJECT_NAME/
 │   │       └── routes.py    # Defines API endpoints
 │   ├── config/
 │   │   └── config.py        # Configuration settings
+│   ├── models/             # Store your ML models here
+│   │   ├── __init__.py
+│   │   └── trained_models/ # Directory for saved models
+│   ├── services/          # Business logic and model inference
+│   │   └── __init__.py
 │   ├── utils/
-│   │   └── helpers.py       # Utility functions (e.g., rate limiting)
-│   └── __init__.py          # Initializes the app package
-├── tests/                 # (Placeholder)  Add your unit tests here
-├── docs/                  # (Placeholder)  Add your API documentation here
-├── venv/                  # Virtual environment
-├── .env                   # Environment variables (sensitive information)
-├── .gitignore             # Specifies intentionally untracked files that Git should ignore
-├── LICENSE                # License information
-├── CONTRIBUTING.md        # Contribution guidelines
-├── README.md              # This file!
-├── requirements.txt       # Lists Python package dependencies
-└── run.py                 # Main application entry point
+│   │   └── helpers.py      # Utility functions (e.g., rate limiting)
+│   └── __init__.py         # Initializes the app package
+├── tests/                # Add your unit tests here
+├── docs/                 # API documentation
+├── venv/                 # Virtual environment
+├── .env                  # Environment variables
+├── .gitignore           # Git ignore rules
+├── LICENSE              # License information
+├── CONTRIBUTING.md      # Contribution guidelines
+├── README.md            # This file!
+├── requirements.txt     # Python package dependencies
+└── run.py              # Main application entry point
 \`\`\`
 
-## Configuration
-
-API configuration is managed through environment variables. Create a `.env` file in the root directory of your project.  Example:
-
-\`\`\`
-SECRET_KEY=your-super-secret-key  # Change this!  Generate a strong, random key.
-API_TITLE=My Awesome API
-API_VERSION=v1
-RATE_LIMIT=1000
-RATE_LIMIT_PERIOD=15
-\`\`\`
-
-**Important:**
-
-*   **`SECRET_KEY`**:  This is crucial for security.  Generate a strong, random key using `secrets.token_hex(32)` in Python and set it as an environment variable.  *Never* commit your secret key to version control.
-*   **Don't store sensitive information directly in your code.**  Use environment variables.
-
-## Deployment
-
-Flaskify is designed for easy deployment.  Here are some options:
-
-### Heroku
-
-1.  **Create a Heroku Account:**  If you don't have one, sign up at [https://www.heroku.com/](https://www.heroku.com/).
-
-2.  **Install the Heroku CLI:**  Follow the instructions on the Heroku website.
-
-3.  **Log in to Heroku:**
-
-    \`\`\`bash
-    heroku login
-    \`\`\`
-
-4.  **Create a Heroku App:**
-
-    \`\`\`bash
-    heroku create $PROJECT_NAME  # Replace with a unique name
-    \`\`\`
-
-5.  **Set the `SECRET_KEY` Environment Variable:**
-
-    \`\`\`bash
-    heroku config:set SECRET_KEY=$(python -c "import secrets; print(secrets.token_hex(32))")
-    \`\`\`
-
-6.  **Deploy the App:**
-
-    \`\`\`bash
-    git push heroku main
-    \`\`\`
-
-    Heroku will automatically detect your Flask app and deploy it.
-
-### Docker
-
-1.  **Install Docker:**  Download and install Docker Desktop from [https://www.docker.com/](https://www.docker.com/).
-
-2.  **Create a `Dockerfile`:**  In the root of your project, create a file named `Dockerfile` with the following contents:
-
-    \`\`\`dockerfile
-    FROM python:3.9-slim-buster
-
-    WORKDIR /app
-
-    COPY requirements.txt .
-    RUN pip install --no-cache-dir -r requirements.txt
-
-    COPY . .
-
-    # Set environment variables (you can also pass these at runtime)
-    ENV FLASK_APP=run.py
-    ENV FLASK_RUN_HOST=0.0.0.0  # Listen on all interfaces
-
-    EXPOSE 5000
-
-    CMD ["flask", "run"]
-    \`\`\`
-
-3.  **Build the Docker Image:**
-
-    \`\`\`bash
-    docker build -t $PROJECT_NAME .
-    \`\`\`
-
-4.  **Run the Docker Container:**
-
-    \`\`\`bash
-    docker run -p 5000:5000 -e SECRET_KEY=$(python -c "import secrets; print(secrets.token_hex(32))") $PROJECT_NAME
-    \`\`\`
-
-    *   `-p 5000:5000`: Maps port 5000 on your host to port 5000 in the container.
-    *   `-e SECRET_KEY=...`:  Sets the `SECRET_KEY` environment variable.
-
-### Railway
-
-1.  **Create a Railway Account:**  If you don't have one, sign up at [https://railway.app/](https://www.railway.app/).
-
-2.  **Install the Railway CLI:**  Follow the instructions on the Railway website.
-
-3.  **Log in to Railway:**
-
-    \`\`\`bash
-    railway login
-    \`\`\`
-
-4.  **Initialize a Railway Project:**
-
-    \`\`\`bash
-    railway init
-    \`\`\`
-
-5.  **Deploy to Railway:**
-
-    \`\`\`bash
-    railway up
-    \`\`\`
-
-6.  **Set the `SECRET_KEY` Environment Variable:**  In the Railway dashboard, add a new variable called `SECRET_KEY` and set its value to a strong, randomly generated key.
-
-## Rate Limiting
-
-The API includes basic rate limiting to prevent abuse.
-
-*   **Default:** 1000 requests per 15 minutes.
-*   **Configuration:**  Adjust the `RATE_LIMIT` and `RATE_LIMIT_PERIOD` environment variables in your `.env` file.
-
-## Making API Requests (Example with Postman)
-
-This section provides examples on how to interact with the API using Postman.
-
-1.  **Download and Install Postman:** If you don't have it already, download and install Postman from [https://www.postman.com/](https://www.postman.com/).
-
-2.  **Import the API endpoints to Postman:**  Download a postman collection from this url: (create it manually)
-
-3. **Send a GET Request to the Health Check Endpoint:**
-
-    *   **URL:** `http://localhost:5000/api/v1/health`
-    *   **Method:** `GET`
-    *   **Headers:**  None required for this endpoint.
-    *   **Body:** None required for this endpoint.
-    *   **Expected Response:**
-
-        ```json
-        {
-            "status": "healthy",
-            "version": "v1",
-            "timestamp": "2023-11-20T12:00:00.000000",
-            "environment": "development"
-        }
-        ```
-
-4.  **Send a GET Request to the Hello World Endpoint:**
-
-    *   **URL:** `http://localhost:5000/api/v1/hello`
-    *   **Method:** `GET`
-    *   **Headers:** None required for this endpoint.
-    *   **Body:** None required for this endpoint.
-    *   **Expected Response:**
-
-        ```json
-        {
-            "message": "Hello, World!",
-            "timestamp": "2023-11-20T12:00:00.000000"
-        }
-        ```
-
-5.  **Send a POST Request to the Hello World Endpoint:**
-
-    *   **URL:** `http://localhost:5000/api/v1/hello`
-    *   **Method:** `POST`
-    *   **Headers:** `Content-Type: application/json`
-    *   **Body:** (Example)
-
-        ```json
-        {
-            "name": "John Doe",
-            "age": 30
-        }
-        ```
-
-    *   **Expected Response:**
-
-        ```json
-        {
-            "message": "Received: {'name': 'John Doe', 'age': 30}",
-            "timestamp": "2023-11-20T12:00:00.000000"
-        }
-        ```
-## Adding Your Own API Endpoints
-
-Here's how to add your own custom API endpoints, for example, to integrate a machine learning model:
-
-1. **Create a New Resource:**
-
-    * Open the `app/api/v1/routes.py` file.
-    * Create a new class that inherits from `Resource`.  This class will represent your API endpoint.
-
-    ```python
-    from flask import request
-    from flask_restful import Resource
-    from app.api.v1 import api
-    from app.utils.helpers import rate_limit
-
-    class MyModelEndpoint(Resource):
-        @rate_limit
-        def post(self):
-            """Endpoint to make predictions using my model."""
-            data = request.get_json()
-            # Load your model
-            # model = load_my_model()
-
-            # Example process
-            # prediction = model.predict([data['feature1'], data['feature2']])
-
-            # Replace with your actual model prediction logic
-            prediction = f"Simulated prediction with input: {data}"
-
-            return {'prediction': prediction}, 200
-
-    # Register the new resource
-    api.add_resource(MyModelEndpoint, '/predict')
-    ```
-
-2.  **Implement the HTTP Methods (GET, POST, PUT, DELETE):**
-    Within your resource class, define methods for each HTTP verb you want to support (e.g., `get()`, `post()`, `put()`, `delete()`).  These methods will handle the incoming requests.
-
-3.  **Access Request Data:**
-    Use the `flask.request` object to access data sent in the request (e.g., JSON payloads, query parameters).
-
-    ```python
-    data = request.get_json() # For JSON data in the body
-    args = request.args        # For query parameters
-    ```
-
-4.  **Register the Resource:**
-    Use the `api.add_resource()` method to register your resource with the Flask-RESTful API.  Specify the URL endpoint for your resource.
-
-    ```python
-    api.add_resource(MyModelEndpoint, '/my_endpoint')
-    ```
-
-5. **Place your model files**
-    Place your model files inside the main directory, for instance `models/` and then make import on the routes that you want to implement your model.
-
-    ```python
-    from app.api.v1 import api
-    from models.yourModel import YourModelClass
-
-    # Load your model
-    model = YourModelClass()
-    ```
-
-## Training a new model
-
-This is a more involved task, but here's the general idea:
-
-1.  **Create a training script:**  Write a separate Python script (e.g., `train_model.py`) that loads your data, trains your model, and saves the trained model to a file (e.g., as a `.pkl` file using `pickle`). Place this script in root directory.
-
-    ```python
-    # train_model.py
-    import pickle
-    # Import Libraries for model training
-    # ...
-
-    # Load your training data
-    # X_train, y_train = load_data()
-
-    # Create and train your model
-    # model = MyModel()
-    # model.fit(X_train, y_train)
-
-    # Save the trained model
-    # pickle.dump(model, open('my_model.pkl', 'wb'))
-    ```
-
-2.  **Run the training script:**  Execute the `train_model.py` script from your terminal:
-
-    ```bash
-    python3 train_model.py
-    ```
-
-    This will train your model and save it to a file.
-
-3.  **Load the model in your API endpoint:**  In your `routes.py` file, load the trained model from the file when the API starts or within the API endpoint function.
-
-    ```python
-    import pickle
-    from flask_restful import Resource
-    from app.api.v1 import api
-    # Load the trained model
-    # model = pickle.load(open('my_model.pkl', 'rb'))
-    ```
-
-## Adding more dependencies
-
-If you want to add a new dependencie, you can easily modify the `requirements.txt` with your dependency, and then run `pip install -r requirements.txt`.
+## Using the API
+
+### Making Requests with Postman
+
+1. **Install Postman:**
+   Download and install from [postman.com](https://www.postman.com/downloads/)
+
+2. **Basic Endpoints:**
+   - Health Check:
+     - Method: GET
+     - URL: \`http://localhost:5000/api/v1/health\`
+   
+   - Hello World:
+     - Method: GET
+     - URL: \`http://localhost:5000/api/v1/hello\`
+     
+   - Hello World (POST):
+     - Method: POST
+     - URL: \`http://localhost:5000/api/v1/hello\`
+     - Headers: \`Content-Type: application/json\`
+     - Body:
+       \`\`\`json
+       {
+           "message": "Hello from Postman!"
+       }
+       \`\`\`
+
+### Adding Custom Endpoints
+
+1. **Create a New Route:**
+   In \`app/api/v1/routes.py\`, add your new endpoint:
+
+   \`\`\`python
+   class MyNewEndpoint(Resource):
+       @rate_limit
+       def get(self):
+           return {"message": "My new endpoint"}, 200
+       
+       @rate_limit
+       def post(self):
+           data = request.get_json()
+           # Process your data here
+           return {"result": "Processing complete"}, 201
+
+   # Register your new endpoint
+   api.add_resource(MyNewEndpoint, '/my-endpoint')
+   \`\`\`
+
+2. **Test Your Endpoint:**
+   - URL: \`http://localhost:5000/api/v1/my-endpoint\`
+   - Methods: GET, POST
+   - Headers: \`Content-Type: application/json\`
+
+### Integrating ML Models
+
+1. **Project Structure for ML:**
+   - Place model classes in \`app/models/\`
+   - Store trained models in \`app/models/trained_models/\`
+   - Put inference logic in \`app/services/\`
+
+2. **Example Model Integration:**
+
+   \`\`\`python
+   # app/models/custom_model.py
+   from transformers import Pipeline  # or your preferred ML library
+
+   class MyModel:
+       def __init__(self):
+           self.model = None
+           
+       def load_model(self, model_path):
+           # Load your model here
+           self.model = Pipeline.from_pretrained(model_path)
+           
+       def predict(self, input_data):
+           # Make predictions
+           return self.model(input_data)
+   \`\`\`
+
+3. **Create a Service:**
+
+   \`\`\`python
+   # app/services/model_service.py
+   from app.models.custom_model import MyModel
+   
+   class ModelService:
+       def __init__(self):
+           self.model = MyModel()
+           self.model.load_model('app/models/trained_models/my_model')
+           
+       def get_prediction(self, input_data):
+           return self.model.predict(input_data)
+   \`\`\`
+
+4. **Create an Endpoint:**
+
+   \`\`\`python
+   # app/api/v1/routes.py
+   from app.services.model_service import ModelService
+   
+   class PredictionEndpoint(Resource):
+       def __init__(self):
+           self.model_service = ModelService()
+   
+       @rate_limit
+       def post(self):
+           data = request.get_json()
+           prediction = self.model_service.get_prediction(data['input'])
+           return {'prediction': prediction}, 200
+   
+   # Register endpoint
+   api.add_resource(PredictionEndpoint, '/predict')
+   \`\`\`
+
+5. **Make Prediction Request:**
+   - Method: POST
+   - URL: \`http://localhost:5000/api/v1/predict\`
+   - Headers: \`Content-Type: application/json\`
+   - Body:
+     \`\`\`json
+     {
+         "input": "your input data here"
+     }
+     \`\`\`
+
+### Training Models
+
+1. **Create Training Script:**
+   Place your training scripts in \`app/models/training/\`:
+
+   \`\`\`python
+   # app/models/training/train_model.py
+   def train_model(data_path, save_path):
+       # Load your data
+       # Train your model
+       # Save the model
+       model.save(save_path)
+   
+   if __name__ == '__main__':
+       train_model('path/to/data', 'app/models/trained_models/my_model')
+   \`\`\`
+
+2. **Run Training:**
+   \`\`\`bash
+   python -m app.models.training.train_model
+   \`\`\`
 
 ## Best Practices
 
-Flaskify promotes best practices:
+1. **API Versioning:**
+   - Keep different versions in separate directories (\`app/api/v1/\`, \`app/api/v2/\`)
+   - Use version prefix in URLs (\`/api/v1/\`, \`/api/v2/\`)
 
-*   ✅ **RESTful Routing:**  Follow RESTful principles for API design.
-*   ✅ **Rate Limiting:**  Protect your API from excessive requests.
-*   ✅ **Error Handling:** Implement proper error handling for a better user experience.
-*   ✅ **Configuration Management:** Use environment variables for configuration.
-*   ✅ **API Versioning:**  Organize your API by version.
-*   ✅ **CORS Support:**  Enable Cross-Origin Resource Sharing (CORS) for web applications.
-*   ✅ **Clean Project Structure:** Maintain a well-organized project.
+2. **Rate Limiting:**
+   - Configure in \`.env\`:
+     \`\`\`
+     RATE_LIMIT=1000
+     RATE_LIMIT_PERIOD=15
+     \`\`\`
+
+3. **Error Handling:**
+   - Use appropriate HTTP status codes
+   - Return descriptive error messages
+   - Log errors properly
+
+4. **Model Management:**
+   - Version your models
+   - Keep model weights in \`app/models/trained_models/\`
+   - Use environment variables for model paths
+   - Document model requirements and dependencies
+
+5. **Testing:**
+   - Write unit tests in \`tests/\`
+   - Test API endpoints
+   - Test model inference
+   - Run tests before deployment
+
+## Security Best Practices
+
+1. **API Security:**
+   - Use HTTPS in production
+   - Implement authentication if needed
+   - Validate all input data
+   - Set appropriate CORS policies
+
+2. **Model Security:**
+   - Validate model inputs
+   - Set resource limits
+   - Monitor model performance
+   - Regular security updates
 
 ## Contributing
 
-See `CONTRIBUTING.md` for details on how to contribute to this project.
+See \`CONTRIBUTING.md\` for details on how to contribute to this project.
 
 ## License
 
-MIT License.  See `LICENSE` for more information.
-
+MIT License. See \`LICENSE\` for more information.
 EOF
 
 # Create CONTRIBUTING.md
@@ -788,11 +692,11 @@ We welcome contributions to the project! Please read this guide to get started.
 
 ## How to Contribute
 
-1.  Fork the repository.
-2.  Create a new branch for your feature or bug fix.
-3.  Write your code and tests.
-4.  Ensure that all tests pass.
-5.  Submit a pull request.
+1. Fork the repository.
+2. Create a new branch for your feature or bug fix.
+3. Write your code and tests.
+4. Ensure that all tests pass.
+5. Submit a pull request.
 
 ## Code Style
 
@@ -827,7 +731,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 EOF
-
 
 # Install requirements
 echo "Installing requirements..."
