@@ -5,12 +5,14 @@ import subprocess
 import sys
 from pathlib import Path
 from ..interactive.prompts import get_project_options, confirm_options
+from ..interactive.templates import TemplateAssembler
+from ..commands.version import update_last_used_version
 from ..utils.helpers import error_exit, success_message, warning_message
 
 class ProjectCreator:
     def __init__(self):
         self.base_dir = Path(__file__).parent.parent.parent
-        self.templates_dir = self.base_dir / "templates"
+        self.template_assembler = TemplateAssembler(self.base_dir)
     
     def create_project(self):
         """Main method to create a new Flaskify project."""
@@ -34,14 +36,14 @@ class ProjectCreator:
                 
             project_dir.mkdir()
             
-            # Select the appropriate template based on options
-            template_path = self._select_template(options)
+            # Get template paths based on options
+            template_paths = self.template_assembler.get_template_paths(options)
             
-            # Copy template files
-            self._copy_template(template_path, project_dir)
+            # Copy and merge template files
+            self.template_assembler.assemble_template(project_dir, template_paths)
             
             # Customize template based on options
-            self._customize_template(project_dir, options)
+            self.template_assembler.customize_template(project_dir, options)
             
             # Set up virtual environment
             self._setup_venv(project_dir)
@@ -52,91 +54,14 @@ class ProjectCreator:
             # Initialize git repository
             self._init_git(project_dir)
             
+            # Update last used version
+            update_last_used_version(version)
+            
             success_message(f"🚀 Flaskify project '{project_name}' created successfully!")
             self._show_next_steps(project_name)
             
         except Exception as e:
             error_exit(f"Failed to create project: {str(e)}")
-    
-    def _select_template(self, options):
-        """Select the appropriate template based on user options."""
-        version = options['version']
-        
-        # Base template selection logic
-        if options['database'] == 'None' and not options['use_ml']:
-            template = 'basic'
-        elif options['database'] != 'None' and not options['use_ml']:
-            if options['database'] == 'MongoDB':
-                template = 'with_mongodb'
-            elif options['database'] == 'PostgreSQL':
-                template = 'with_postgres'
-            else:
-                template = 'with_' + options['database'].lower()
-        elif options['use_ml']:
-            template = 'with_ml'
-        else:
-            template = 'full'
-        
-        template_path = self.templates_dir / version / template
-        
-        if not template_path.exists():
-            # Fall back to basic template if specific one doesn't exist
-            warning_message(f"Template {template} not found for {version}, using basic template.")
-            template_path = self.templates_dir / version / 'basic'
-            
-        return template_path
-    
-    def _copy_template(self, template_path, project_dir):
-        """Copy template files to the project directory."""
-        for item in template_path.glob('*'):
-            if item.is_dir():
-                shutil.copytree(item, project_dir / item.name)
-            else:
-                shutil.copy2(item, project_dir / item.name)
-    
-    def _customize_template(self, project_dir, options):
-        """Customize the template based on user options."""
-        # Update project name in files
-        self._replace_in_files(project_dir, "PROJECT_NAME", options['project_name'])
-        
-        # Configure database settings if selected
-        if options['database'] != 'None':
-            self._configure_database(project_dir, options['database'])
-        
-        # Add ML support if selected
-        if options['use_ml']:
-            self._configure_ml_support(project_dir)
-        
-        # Configure deployment settings
-        if options['deployment_target'] != 'None':
-            self._configure_deployment(project_dir, options['deployment_target'])
-    
-    def _replace_in_files(self, directory, placeholder, replacement):
-        """Replace placeholder text in all project files."""
-        for path in directory.glob('**/*'):
-            if path.is_file() and path.suffix in ['.py', '.md', '.rst', '.txt', '.sh', '.yml', '.yaml', '.env']:
-                try:
-                    content = path.read_text()
-                    if placeholder in content:
-                        path.write_text(content.replace(placeholder, replacement))
-                except UnicodeDecodeError:
-                    # Skip binary files
-                    pass
-    
-    def _configure_database(self, project_dir, database):
-        """Configure the selected database."""
-        # Implementation details for each database type
-        pass
-    
-    def _configure_ml_support(self, project_dir):
-        """Add machine learning support to the project."""
-        # Implementation details for ML support
-        pass
-    
-    def _configure_deployment(self, project_dir, deployment):
-        """Configure deployment settings."""
-        # Implementation details for each deployment target
-        pass
     
     def _setup_venv(self, project_dir):
         """Set up a virtual environment for the project."""
