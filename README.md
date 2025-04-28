@@ -60,11 +60,11 @@
 
 ```bash
 # Linux/Mac
-curl -s https://raw.githubusercontent.com/DonArtkins/flaskify/master/flaskify/flaskify-install.sh | bash
+curl -s https://raw.githubusercontent.com/DonArtkins/flaskify/master/flaskify-install.sh | bash
 ```
 ```bash
 # Windows
-iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/DonArtkins/flaskify/master/flaskify/flaskify-install.ps1'))
+iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/DonArtkins/flaskify/master/flaskify-install.ps1'))
 ```
 
 ## 🏃 Quick Start
