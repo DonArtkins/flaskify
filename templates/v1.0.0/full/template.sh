@@ -670,3 +670,676 @@ This guide provides instructions for deploying the Flask API to various environm
 6. Enable the site and restart services:
    ```bash
    sudo ln -s /etc/nginx/sites-available/flaskapi /etc/nginx/
+   ```
+# Add security enhancements
+cat > app/security/__init__.py << EOF
+"""Security module for enhanced application security."""
+from flask import current_app, request
+import secrets
+import re
+import hashlib
+import base64
+from functools import wraps
+
+def initialize_security(app):
+    """Initialize security features."""
+    app.config.setdefault('SECURITY_ENABLED', True)
+    app.config.setdefault('SECURITY_CONTENT_SECURITY_POLICY', True)
+    app.config.setdefault('SECURITY_STRICT_TRANSPORT_SECURITY', True)
+    
+    @app.after_request
+    def add_security_headers(response):
+        """Add security headers to each response."""
+        if app.config['SECURITY_ENABLED']:
+            # Security headers
+            response.headers['X-Content-Type-Options'] = 'nosniff'
+            response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+            response.headers['X-XSS-Protection'] = '1; mode=block'
+            
+            # Content Security Policy
+            if app.config['SECURITY_CONTENT_SECURITY_POLICY']:
+                response.headers['Content-Security-Policy'] = (
+                    "default-src 'self'; "
+                    "script-src 'self'; "
+                    "style-src 'self'; "
+                    "img-src 'self' data:; "
+                    "font-src 'self'; "
+                    "object-src 'none'; "
+                    "connect-src 'self'"
+                )
+            
+            # HSTS
+            if app.config['SECURITY_STRICT_TRANSPORT_SECURITY'] and not app.debug:
+                response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+                
+        return response
+
+# CSRF Protection
+def generate_csrf_token():
+    """Generate a secure CSRF token."""
+    return base64.b64encode(secrets.token_bytes(32)).decode('utf-8')
+
+def verify_csrf_token(token):
+    """Verify a CSRF token."""
+    if not token or not current_app.csrf_token:
+        return False
+    
+    # Use constant-time comparison to prevent timing attacks
+    return secrets.compare_digest(token, current_app.csrf_token)
+
+def csrf_required(f):
+    """Decorator to require CSRF token verification."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Only check POST/PUT/DELETE/PATCH requests
+        if request.method in ('POST', 'PUT', 'DELETE', 'PATCH'):
+            token = request.headers.get('X-CSRF-Token')
+            if not verify_csrf_token(token):
+                return {'error': 'CSRF token missing or invalid'}, 403
+        return f(*args, **kwargs)
+    return decorated_function
+EOF
+
+# Add monitoring and logging integration
+mkdir -p app/monitoring
+cat > app/monitoring/__init__.py << EOF
+"""Monitoring and logging utilities."""
+import logging
+import time
+from flask import request, g, current_app
+import uuid
+import json
+from functools import wraps
+
+class RequestMonitor:
+    """Request monitoring and logging."""
+
+    def __init__(self, app=None):
+        self.app = app
+        self.logger = logging.getLogger('request_monitor')
+        
+        if app is not None:
+            self.init_app(app)
+            
+    def init_app(self, app):
+        """Initialize with Flask app."""
+        app.before_request(self.before_request)
+        app.after_request(self.after_request)
+        app.teardown_request(self.teardown_request)
+        
+        # Configure logger
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter(
+            '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
+        )
+        handler.setFormatter(formatter)
+        self.logger.addHandler(handler)
+        self.logger.setLevel(app.config.get('LOG_LEVEL', logging.INFO))
+        
+    def before_request(self):
+        """Log before processing request."""
+        g.start_time = time.time()
+        g.request_id = str(uuid.uuid4())
+        
+        # Log the request
+        self.logger.info(
+            f"Request started: {g.request_id} - {request.method} {request.path}"
+        )
+        
+    def after_request(self, response):
+        """Log after processing request."""
+        if hasattr(g, 'start_time'):
+            duration = time.time() - g.start_time
+            self.logger.info(
+                f"Request {g.request_id} completed: {response.status_code} in {duration:.4f}s"
+            )
+            
+            # Add request ID to response headers
+            response.headers['X-Request-ID'] = g.request_id
+            
+            # Log slow requests
+            if current_app.config.get('SLOW_REQUEST_THRESHOLD') and \
+                    duration > current_app.config.get('SLOW_REQUEST_THRESHOLD'):
+                self.logger.warning(
+                    f"Slow request detected: {g.request_id} took {duration:.4f}s"
+                )
+        
+        return response
+        
+    def teardown_request(self, exception=None):
+        """Log exceptions during request processing."""
+        if exception:
+            self.logger.error(
+                f"Request {getattr(g, 'request_id', 'unknown')} failed with exception: {str(exception)}"
+            )
+
+def log_function_execution(func=None, *, level=logging.INFO):
+    """Decorator to log function execution time."""
+    def decorator(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            logger = logging.getLogger(f.__module__)
+            start_time = time.time()
+            
+            try:
+                result = f(*args, **kwargs)
+                duration = time.time() - start_time
+                
+                # Log execution
+                logger.log(
+                    level,
+                    f"Function '{f.__name__}' executed in {duration:.4f}s"
+                )
+                
+                return result
+            except Exception as e:
+                duration = time.time() - start_time
+                logger.error(
+                    f"Function '{f.__name__}' failed after {duration:.4f}s with error: {str(e)}"
+                )
+                raise
+        
+        return wrapped
+    
+    if func:
+        return decorator(func)
+    return decorator
+EOF
+
+# Update run.py to include monitoring
+cat > run.py.merge << EOF
+{
+  "operations": [
+    {
+      "type": "replace",
+      "target": "from app import create_app",
+      "content": "from app import create_app\nfrom app.monitoring import RequestMonitor"
+    },
+    {
+      "type": "append",
+      "content": "\n# Initialize monitoring\nrequest_monitor = RequestMonitor(app)"
+    }
+  ]
+}
+EOF
+
+# Add API versioning handler
+cat > app/utils/versioning.py << EOF
+"""API versioning utilities."""
+from functools import wraps
+from flask import request, current_app, jsonify
+
+def api_version_required(min_version, max_version=None):
+    """Decorator to enforce API version requirements."""
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            # Extract version from request
+            version = request.headers.get('X-API-Version', current_app.config['API_VERSION'])
+            
+            # Remove 'v' prefix if present
+            if version and version.lower().startswith('v'):
+                version = version[1:]
+                
+            # Convert to float for comparison
+            try:
+                v_float = float(version)
+                min_v_float = float(min_version.lstrip('v'))
+                max_v_float = float(max_version.lstrip('v')) if max_version else None
+            except ValueError:
+                return jsonify({'error': 'Invalid API version format'}), 400
+            
+            # Check version constraints
+            if v_float < min_v_float:
+                return jsonify({
+                    'error': f'This endpoint requires API version {min_version} or higher',
+                    'current_version': version,
+                    'required_version': min_version
+                }), 400
+                
+            if max_v_float and v_float > max_v_float:
+                return jsonify({
+                    'error': f'This endpoint requires API version {max_v_float} or lower',
+                    'current_version': version,
+                    'required_version': f'<= {max_version}'
+                }), 400
+                
+            return f(*args, **kwargs)
+        return wrapper
+    return decorator
+EOF
+
+# Add example usage of versioning
+cat > app/api/v1/routes.py.merge << EOF
+{
+  "operations": [
+    {
+      "type": "append",
+      "content": "\nfrom app.utils.versioning import api_version_required\n\nclass VersionedResource(Resource):\n    @rate_limit\n    @api_version_required('1.0', '1.5')\n    def get(self):\n        \"\"\"Example of versioned endpoint (requires v1.0-v1.5).\"\"\"\n        return {\n            'message': 'This endpoint is available in API versions 1.0 to 1.5',\n            'version': request.headers.get('X-API-Version', current_app.config['API_VERSION'])\n        }\n\n# Register versioned endpoint\napi.add_resource(VersionedResource, '/versioned')"
+    }
+  ]
+}
+EOF
+
+# Create API documentation setup
+cat > app/api/docs.py << EOF
+"""API documentation setup."""
+from flask import Blueprint, render_template, current_app
+import os
+import json
+import markdown
+import re
+from flask_restful import Resource
+
+# Create docs blueprint
+docs_bp = Blueprint('docs', __name__)
+
+# Custom renderer for API documentation
+class APIDocumentation:
+    def __init__(self, app=None):
+        self.app = app
+        self.endpoints = []
+        self.version = 'v1'
+        
+        if app is not None:
+            self.init_app(app)
+            
+    def init_app(self, app):
+        """Initialize with Flask app."""
+        self.app = app
+        self.version = app.config.get('API_VERSION', 'v1')
+        
+        # Register docs blueprint
+        app.register_blueprint(docs_bp, url_prefix='/api/docs')
+        
+        # Add URL rule for API docs JSON
+        app.add_url_rule(
+            f'/api/{self.version}/docs.json',
+            endpoint='api_docs_json',
+            view_func=self.get_docs_json
+        )
+        
+    def get_docs_json(self):
+        """Generate API documentation in JSON format."""
+        self.collect_endpoints()
+        
+        return {
+            'api_name': self.app.config.get('API_TITLE', 'Flask API'),
+            'version': self.version,
+            'endpoints': self.endpoints,
+            'base_url': f'/api/{self.version}'
+        }
+        
+    def collect_endpoints(self):
+        """Collect API endpoints and documentation."""
+        self.endpoints = []
+        
+        # Iterate through all Flask-RESTful resources
+        api_resources = self.app.extensions.get('flask_restful', {}).resources or []
+        
+        for resource, urls, kwargs in api_resources:
+            for url in urls:
+                # Only include endpoints in the current API version
+                if f'/api/{self.version}/' in url:
+                    endpoint_data = self._parse_resource_docs(resource, url)
+                    if endpoint_data:
+                        self.endpoints.append(endpoint_data)
+    
+    def _parse_resource_docs(self, resource_cls, url):
+        """Parse documentation from a resource class."""
+        endpoint = {
+            'url': url,
+            'methods': [],
+            'name': resource_cls.__name__,
+            'description': resource_cls.__doc__ or 'No description'
+        }
+        
+        # Check for HTTP methods in the resource
+        for method in ['get', 'post', 'put', 'delete', 'patch']:
+            if hasattr(resource_cls, method):
+                method_func = getattr(resource_cls, method)
+                endpoint['methods'].append({
+                    'type': method.upper(),
+                    'description': method_func.__doc__ or 'No description',
+                    'auth_required': self._check_if_auth_required(method_func),
+                    'rate_limited': self._check_if_rate_limited(method_func)
+                })
+                
+        # Only include endpoints with methods
+        return endpoint if endpoint['methods'] else None
+    
+    def _check_if_auth_required(self, func):
+        """Check if a function requires authentication."""
+        # Check if the function is wrapped with login_required
+        # This is a simplified check and might not work for all decorators
+        return 'jwt_required' in str(func.__code__.co_consts)
+    
+    def _check_if_rate_limited(self, func):
+        """Check if a function is rate limited."""
+        # Check if the function is wrapped with rate_limit
+        return 'rate_limit' in str(func.__code__.co_consts)
+
+# Routes for documentation
+@docs_bp.route('/')
+def index():
+    """API documentation index page."""
+    return f'<h1>API Documentation</h1><p>View the <a href="/api/{current_app.config.get("API_VERSION", "v1")}/docs.json">API docs JSON</a>.</p>'
+EOF
+
+# Update app factory to include docs
+cat > app/__init__.py.merge << EOF
+{
+  "operations": [
+    {
+      "type": "replace",
+      "target": "from flask import Flask",
+      "content": "from flask import Flask\nfrom app.api.docs import APIDocumentation"
+    },
+    {
+      "type": "append",
+      "content": "\n    # Initialize API documentation\n    api_docs = APIDocumentation(app)"
+    }
+  ]
+}
+EOF
+
+# Add cache utility
+cat > app/utils/cache.py << EOF
+"""Caching utilities for the API."""
+from functools import wraps
+from flask import request, current_app
+import time
+import hashlib
+import json
+import threading
+
+class SimpleCache:
+    """Simple in-memory cache implementation."""
+    
+    def __init__(self, default_ttl=300):
+        """Initialize cache with default TTL in seconds."""
+        self.cache = {}
+        self.default_ttl = default_ttl
+        self.lock = threading.Lock()
+        
+    def get(self, key):
+        """Get a value from the cache."""
+        with self.lock:
+            if key not in self.cache:
+                return None
+                
+            value, expiry = self.cache[key]
+            
+            # Check if expired
+            if expiry < time.time():
+                del self.cache[key]
+                return None
+                
+            return value
+            
+    def set(self, key, value, ttl=None):
+        """Set a value in the cache with TTL in seconds."""
+        if ttl is None:
+            ttl = self.default_ttl
+            
+        with self.lock:
+            expiry = time.time() + ttl
+            self.cache[key] = (value, expiry)
+            
+    def delete(self, key):
+        """Delete a key from the cache."""
+        with self.lock:
+            if key in self.cache:
+                del self.cache[key]
+                
+    def clear(self):
+        """Clear all cache entries."""
+        with self.lock:
+            self.cache.clear()
+            
+# Create global cache instance
+cache = SimpleCache()
+
+def cached(ttl=None):
+    """Decorator to cache function results."""
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            # Generate cache key
+            key_parts = [
+                f.__module__,
+                f.__name__,
+                str(args),
+                str(kwargs)
+            ]
+            
+            # For HTTP requests, include method and path
+            if request:
+                key_parts.extend([
+                    request.method,
+                    request.path,
+                    str(dict(request.args))
+                ])
+                
+            # Create hash from parts
+            key = hashlib.md5(json.dumps(key_parts).encode()).hexdigest()
+            
+            # Try to get from cache
+            cached_value = cache.get(key)
+            if cached_value is not None:
+                return cached_value
+                
+            # Execute function and cache result
+            result = f(*args, **kwargs)
+            cache.set(key, result, ttl)
+            return result
+        
+        return wrapper
+    
+    return decorator
+EOF
+
+# Update .env to include the new features
+cat > .env.merge << EOF
+{
+  "operations": [
+    {
+      "type": "append",
+      "content": "\n# Monitoring & Logging\nLOG_LEVEL=INFO\nSLOW_REQUEST_THRESHOLD=1.0  # seconds\n\n# Security\nSECURITY_ENABLED=True\nSECURITY_CONTENT_SECURITY_POLICY=True\nSECURITY_STRICT_TRANSPORT_SECURITY=True\n"
+    }
+  ]
+}
+EOF
+
+# Update requirements.txt
+cat > requirements.txt.merge << EOF
+{
+  "operations": [
+    {
+      "type": "append", 
+      "content": "Flask-Limiter==3.3.1\npyjwt==2.8.0\nsqlalchemy==2.0.23\npsycopg2-binary==2.9.9\npymongo==4.6.0\nalembic==1.12.0\npandas==2.0.3\nscikit-learn==1.3.0\njoblib==1.3.2\nnumpy==1.24.3\nmarkdown==3.5\ngunicorn==21.2.0\n"
+    }
+  ]
+}
+EOF
+
+# Create a Docker setup
+cat > Dockerfile << EOF
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \\
+    build-essential \\
+    libpq-dev \\
+    && apt-get clean \\
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV FLASK_APP=run.py
+ENV FLASK_ENV=production
+
+# Expose port
+EXPOSE 5000
+
+# Run with gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "run:app"]
+EOF
+
+# Create docker-compose setup
+cat > docker-compose.yml << EOF
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+      - mongodb
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/flask_api
+      - MONGO_URI=mongodb://mongodb:27017/
+      - MONGO_DB_NAME=flask_api
+    volumes:
+      - ./app:/app/app
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=flask_api
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  mongo_data:
+EOF
+
+# Create .env.docker file for Docker environment
+cat > .env.docker << EOF
+# Flask Configuration
+FLASK_APP=run.py
+FLASK_ENV=production
+FLASK_DEBUG=False
+FLASK_HOST=0.0.0.0
+FLASK_PORT=5000
+
+# API Configuration
+API_TITLE=Flask API
+API_VERSION=v1
+RATE_LIMIT=100
+RATE_LIMIT_PERIOD=60
+
+# Database Selection (postgres, mongodb, memory)
+DATABASE_TYPE=postgres
+
+# PostgreSQL
+DATABASE_URL=postgresql://postgres:postgres@postgres:5432/flask_api
+
+# MongoDB
+MONGO_URI=mongodb://mongodb:27017/
+MONGO_DB_NAME=flask_api
+
+# Security
+SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
+JWT_SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
+SECURITY_ENABLED=True
+
+# Monitoring & Logging
+LOG_LEVEL=INFO
+SLOW_REQUEST_THRESHOLD=1.0  # seconds
+EOF
+
+# Create GitHub Actions CI workflow
+mkdir -p .github/workflows
+cat > .github/workflows/ci.yml << EOF
+name: CI
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      mongodb:
+        image: mongo:6
+        ports:
+          - 27017:27017
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install pytest pytest-cov flake8
+    
+    - name: Lint with flake8
+      run: |
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+    
+    - name: Test with pytest
+      env:
+        FLASK_ENV: testing
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        MONGO_URI: mongodb://localhost:27017/
+        MONGO_DB_NAME: test_db
+      run: |
+        pytest --cov=app tests/
+EOF
+
+success_message "Full template created successfully!"
+echo "Your API project is ready to use. Check the README.md for details."
