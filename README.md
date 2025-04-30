@@ -1,4 +1,4 @@
-# Flaskify Projects 🚀
+# Flaskify 🚀
 
 <div align="center">
 
@@ -6,318 +6,164 @@
 [![GitHub license](https://img.shields.io/github/license/DonArtkins/flaskify)](https://github.com/DonArtkins/flaskify/blob/main/LICENSE)
 [![Python versions](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue)](https://www.python.org/downloads/)
 [![PyPI version](https://badge.fury.io/py/flaskify.svg)](https://badge.fury.io/py/flaskify)
-
-[DOCUMENTATION](https://flaskify.readthedocs.io/en/latest/index.html) | [CONTRIBUTING](CONTRIBUTING.md) | [LICENSE](LICENSE)
+![Flask](https://img.shields.io/badge/Flask-2.0+-orange)
+![Version](https://img.shields.io/badge/Flaskify-v1.0.0-blue)
 
 *A lightning-fast Flask REST API generator with built-in ML support, database integrations, and industry best practices* 🌟
+
+[DOCUMENTATION](https://flaskify.readthedocs.io/en/latest/index.html) | [CONTRIBUTING](CONTRIBUTING.md) | [LICENSE](LICENSE)
 
 </div>
 
 ---
 
-## 🌟 Features
+## 🚀 Features
 
-<div align="center">
+- **Quick Project Setup**: Generate a complete Flask API project in seconds
+- **Multiple Database Support**: Integration with MongoDB, PostgreSQL, Firebase, and Supabase
+- **Authentication Ready**: JWT, OAuth2, and Basic authentication options
+- **ML Model Support**: Easy integration of machine learning models
+- **API Documentation**: Automatic Swagger/OpenAPI documentation
+- **Deployment Ready**: Configuration for Docker, Heroku, and AWS
+- **Testing Framework**: Pytest setup included
+- **Asynchronous Support**: Optional async endpoints
+- **Version Management**: Multiple template versions available
 
-| Core Features | ML Support | Database Integration | DevOps Ready |
-|--------------|------------|---------------------|--------------|
-| 🚄 High-performance REST API | 🤖 HuggingFace Integration | 📊 MongoDB Support | 🔄 CI/CD Templates |
-| 🔒 Rate Limiting & Security | 🧠 Model Training Pipeline | 🔥 Firebase Integration | 🐳 Docker Support |
-| 🌐 CORS & Authentication | 📦 Model Management | ⚡ Supabase Ready | 🚀 Heroku Deploy |
-|                          | 🎯 Inference API | 🐘 PostgreSQL Support |                  |
+## 📋 Requirements
 
-</div>
+- Python 3.7+
+- Git
 
-## 📚 Table of Contents
+## 💻 Installation
 
-- [Installation](#-installation)
-- [Quick Start](#-quick-start)
-- [Project Structure](#-project-structure)
-- [API Development](#-api-development)
-  - [Basic Usage](#basic-usage)
-  - [Authentication](#authentication)
-  - [Rate Limiting](#rate-limiting)
-  - [Versioning](#versioning)
-- [Database Integration](#-database-integration)
-  - [MongoDB Setup](#mongodb-setup)
-  - [PostgreSQL Integration](#postgresql-integration)
-  - [Firebase Configuration](#firebase-configuration)
-  - [Supabase Setup](#supabase-setup)
-- [ML Model Integration](#-ml-model-integration)
-  - [HuggingFace Models](#huggingface-models)
-  - [Custom Models](#custom-models)
-  - [Training Pipeline](#training-pipeline)
-- [Deployment](#-deployment)
-  - [Docker](#docker)
-  - [Heroku](#heroku)
-  - [AWS](#aws)
-- [Contributing](#-contributing)
-- [License](#-license)
-
-## 🚀 Installation
-
-### Using curl (Recommended)
+### Linux/macOS
 
 ```bash
-# Linux/Mac
-curl -s https://raw.githubusercontent.com/DonArtkins/flaskify/master/flaskify-install.sh | bash
+curl -s https://raw.githubusercontent.com/DonArtkins/flaskify/master/installers/linux/install.sh | bash
 ```
+
+### Windows
+
+```powershell
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/DonArtkins/flaskify/master/installers/windows/install.ps1 -OutFile install.ps1; .\install.ps1
+```
+
+Or clone the repository and install manually:
+
 ```bash
-# Windows
-iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/DonArtkins/flaskify/master/flaskify-install.ps1'))
+git clone https://github.com/DonArtkins/flaskify.git
+cd flaskify
+pip install -e .
 ```
 
-## 🏃 Quick Start
+## 🛠️ Usage
 
-1. **Create a New Project**
-   ```bash
-   flaskify create my-awesome-api
-   ```
-   ```bash
-   cd my-awesome-api
-   ```
+### Create a New Project
 
-2. **Set Up Virtual Environment**
-   ```bash
-   # Linux/Mac
-   python -m venv venv
-   source venv/bin/activate
-   ```
-   ```bash
-   # Windows
-   python -m venv venv
-   .\venv\Scripts\activate
-   ```
+```bash
+flaskify create
+```
 
-3. **Install Dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+Follow the interactive prompts to configure your project:
+- Project name
+- Database integration
+- ML model support
+- Deployment target
+- Authentication method
+- Swagger documentation
+- Async endpoints
+- Testing setup
 
-4. **Run the API**
-   ```bash
-   python run.py
-   ```
+### Additional Commands
 
-   Your API is now running at `http://localhost:5000` 🎉
+```bash
+flaskify versions        # Check available versions
+flaskify set_version v1.0.0  # Set default version
+flaskify info            # Show Flaskify info
+```
 
-## 📁 Project Structure
+## 📂 Project Structure
+
+When you create a new project with Flaskify, it generates a structure like:
 
 ```
-my-awesome-api/
+my_api/
 ├── app/
-│   ├── api/
-│   │   └── v1/              # API version 1
-│   │       ├── __init__.py  # Initializes the v1 API
-│   │       └── routes.py    # Defines API endpoints
-│   ├── config/
-│   │   └── config.py        # Configuration settings
-│   ├── models/              # Store your ML models here
-│   │   ├── __init__.py
-│   │   └── trained_models/  # Directory for saved models
-│   ├── services/            # Business logic and model inference
-│   │   └── __init__.py
-│   ├── utils/
-│   │   └── helpers.py       # Utility functions (e.g., rate limiting)
-│   └── __init__.py          # Initializes the app package
-├── tests/                   # Add your unit tests here
-├── docs/                    # API documentation
-├── venv/                    # Virtual environment
-├── .env                     # Environment variables
-├── .gitignore               # Git ignore rules
-├── LICENSE                  # License information
-├── CONTRIBUTING.md          # Contribution guidelines
-├── README.md                # This file!
-├── requirements.txt         # Python package dependencies
-└── run.py                   # Main application entry point
+│   ├── __init__.py
+│   ├── routes/
+│   ├── models/
+│   ├── services/
+│   └── utils/
+├── config/
+│   └── config.py
+├── tests/
+├── requirements.txt
+├── run.py
+└── README.md
 ```
 
-## 🛠 API Development
+## 🔌 Supported Integrations
 
-### Basic Usage
-
-#### Creating Endpoints
-
-```python
-from app.api.v1 import api
-from flask_restful import Resource
-
-class UserResource(Resource):
-    @api.doc('get_user')
-    def get(self, user_id):
-        return {'user_id': user_id}
-
-api.add_resource(UserResource, '/users/<int:user_id>')
-```
-
-#### Making Requests with Postman
-
-1. **GET Request**
-   ```http
-   GET http://localhost:5000/api/v1/users/1
-   ```
-
-2. **POST Request**
-   ```http
-   POST http://localhost:5000/api/v1/users
-   Content-Type: application/json
-
-   {
-     "name": "John Doe",
-     "email": "john@example.com"
-   }
-   ```
+### Databases
+- **MongoDB**: Document-based NoSQL database
+- **PostgreSQL**: Relational database
+- **Firebase**: Google's mobile and web application platform
+- **Supabase**: Open source Firebase alternative
 
 ### Authentication
+- **JWT**: JSON Web Token authentication
+- **OAuth2**: Authorization framework
+- **Basic**: Simple username/password authentication
 
-```python
-from app.utils.auth import require_auth
+### Deployment
+- **Docker**: Containerization for consistent deployment
+- **Heroku**: PaaS for easy cloud deployment
+- **AWS**: Amazon Web Services deployment configuration
 
-class SecureResource(Resource):
-    @require_auth
-    def get(self):
-        return {'message': 'secure data'}
-```
+## 🤖 ML Support
 
-### Rate Limiting
+When enabled, Flaskify adds:
+- Model loading/inference endpoints
+- File upload for model inputs
+- Example prediction route
+- Format conversion utilities
 
-```python
-from app.utils.rate_limit import rate_limit
+## 🧪 Testing
 
-@rate_limit(requests=100, window=60)  # 100 requests per minute
-def my_endpoint():
-    return {'status': 'success'}
-```
+Includes pytest setup with:
+- Fixture examples
+- API test examples
+- Test configuration
 
-### Versioning
+## 🛣️ Roadmap
 
-Create new versions in `app/api/v2`, `app/api/v3`, etc.
+- GraphQL support
+- Additional database integrations
+- WebSocket support
+- Admin dashboard
+- CI/CD pipeline templates
 
-```python
-# app/api/v2/routes.py
-from flask import Blueprint
+## 👥 Contributing
 
-v2_blueprint = Blueprint('v2', __name__, url_prefix='/api/v2')
-```
+Contributions are welcome! Please check out our [contributing guidelines](CONTRIBUTING.md).
 
-## 💾 Database Integration
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-### MongoDB Setup
+## 📝 License
 
-```python
-from app.database import mongo
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-class UserModel(mongo.Document):
-    email = mongo.StringField(required=True)
-    name = mongo.StringField(required=True)
-```
+## 🙏 Acknowledgements
 
-### PostgreSQL Integration
+- [Flask](https://flask.palletsprojects.com/)
+- [Click](https://click.palletsprojects.com/)
+- [Inquirer](https://github.com/magmax/python-inquirer)
+- All the amazing open-source projects that made this possible
 
-```python
-from app.database import db
+---
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True)
-```
-
-### Firebase Configuration
-
-```python
-# config/firebase.py
-import firebase_admin
-from firebase_admin import credentials
-
-cred = credentials.Certificate('path/to/serviceAccount.json')
-firebase_admin.initialize_app(cred)
-```
-
-### Supabase Setup
-
-```python
-from supabase import create_client
-
-supabase = create_client(
-    supabase_url='YOUR_SUPABASE_URL',
-    supabase_key='YOUR_SUPABASE_KEY'
-)
-```
-
-## 🤖 ML Model Integration
-
-### HuggingFace Models
-
-```python
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
-
-def load_model():
-    tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
-    model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased")
-    return model, tokenizer
-```
-
-### Custom Models
-
-```python
-# app/models/ml/custom_model.py
-class MyModel:
-    def train(self, data):
-        # Training logic
-        pass
-
-    def predict(self, input_data):
-        # Prediction logic
-        pass
-```
-
-### Training Pipeline
-
-```python
-# app/models/ml/train.py
-def train_model(data_path, save_path):
-    model = MyModel()
-    data = load_data(data_path)
-    model.train(data)
-    model.save(save_path)
-
-if __name__ == '__main__':
-    train_model('data/training.csv', 'models/my_model.pkl')
-```
-
-## 🚢 Deployment
-
-### Docker
-
-```dockerfile
-FROM python:3.9-slim
-
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-
-COPY . .
-CMD ["python", "run.py"]
-```
-
-### Heroku
-
-```bash
-heroku create my-awesome-api
-git push heroku main
-```
-
-### AWS
-
-```bash
-aws elasticbeanstalk create-application --application-name my-awesome-api
-aws elasticbeanstalk create-environment --environment-name production
-```
-
-## 🤝 Contributing
-
-We love contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-## 📄 License
-
-MIT License - see the [LICENSE](LICENSE) file for details.
+Created with ❤️ by [DonArtkins](https://github.com/DonArtkins)
