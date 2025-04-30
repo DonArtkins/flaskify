@@ -2,6 +2,7 @@
 import os
 import shutil
 from pathlib import Path
+import json
 
 class TemplateAssembler:
     """
@@ -31,6 +32,8 @@ class TemplateAssembler:
         
         # Always include basic template
         basic_path = self.templates_dir / version / 'basic'
+        if not basic_path.exists():
+            raise FileNotFoundError(f"Basic template for version {version} not found at {basic_path}")
         template_paths.append(basic_path)
         
         # Add database template if selected
@@ -89,10 +92,58 @@ class TemplateAssembler:
             template_paths (list): List of template directory paths
         """
         # Keep track of copied files to avoid overwriting
-        copied_files = set()
+        copied_files = {}
         
         for template_path in template_paths:
             self._copy_template_path(template_path, project_dir, copied_files)
+        
+        # Process any merge files
+        self._process_merge_files(project_dir)
+    
+    def _process_merge_files(self, project_dir):
+        """
+        Process any .merge files to combine content from multiple templates.
+        
+        Args:
+            project_dir (Path): Project directory
+        """
+        for merge_file in project_dir.glob('**/*.merge'):
+            target_file = merge_file.with_suffix('')
+            
+            # Read merge instructions and content
+            try:
+                with open(merge_file, 'r') as f:
+                    merge_data = json.load(f)
+                
+                # If target file exists, read it first
+                existing_content = ""
+                if target_file.exists():
+                    with open(target_file, 'r') as f:
+                        existing_content = f.read()
+                
+                # Process merge operations
+                final_content = existing_content
+                for op in merge_data.get('operations', []):
+                    if op['type'] == 'append':
+                        final_content += op['content']
+                    elif op['type'] == 'prepend':
+                        final_content = op['content'] + final_content
+                    elif op['type'] == 'replace':
+                        final_content = final_content.replace(op['target'], op['content'])
+                    elif op['type'] == 'insert_after':
+                        if op['target'] in final_content:
+                            final_content = final_content.replace(op['target'], 
+                                                                 op['target'] + op['content'])
+                
+                # Write the merged content back
+                with open(target_file, 'w') as f:
+                    f.write(final_content)
+                
+                # Remove the merge file
+                merge_file.unlink()
+                
+            except Exception as e:
+                print(f"Error processing merge file {merge_file}: {e}")
     
     def _copy_template_path(self, template_path, project_dir, copied_files):
         """
@@ -101,7 +152,7 @@ class TemplateAssembler:
         Args:
             template_path (Path): Source template directory
             project_dir (Path): Target project directory
-            copied_files (set): Set of already copied files
+            copied_files (dict): Dict of already copied files with their source paths
         """
         if not template_path.exists():
             print(f"Warning: Template path {template_path} does not exist.")
@@ -112,8 +163,8 @@ class TemplateAssembler:
             relative_path = item.relative_to(template_path)
             target_path = project_dir / relative_path
             
-            # Skip if we've already copied this file (from another template)
-            if str(target_path) in copied_files and not item.is_dir():
+            # Skip if .merge file - we'll process those separately
+            if item.suffix == '.merge':
                 continue
                 
             if item.is_dir():
@@ -122,9 +173,16 @@ class TemplateAssembler:
                 # Create parent directories if they don't exist
                 target_path.parent.mkdir(exist_ok=True, parents=True)
                 
+                # Check if file already copied from another template
+                if str(target_path) in copied_files:
+                    # This file was already copied, we might need to merge
+                    # For now, later templates override earlier ones
+                    prior_source = copied_files[str(target_path)]
+                    print(f"Note: File {target_path} already copied from {prior_source}, overriding with {item}")
+                
                 # Copy the file
                 shutil.copy2(item, target_path)
-                copied_files.add(str(target_path))
+                copied_files[str(target_path)] = item
     
     def customize_template(self, project_dir, options):
         """
