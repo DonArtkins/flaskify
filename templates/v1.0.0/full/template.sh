@@ -308,4 +308,365 @@ mkdir -p scripts
 
 # Create setup script
 cat > scripts/setup_project.sh << EOF
-#!/bin/
+#!/bin/bash
+
+# Setup script for the Flask API project
+set -e
+
+# Color codes for output
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo -e "\${YELLOW}Setting up the Flask API project...\${NC}"
+
+# Create virtual environment if it doesn't exist
+if [ ! -d "venv" ]; then
+    echo -e "\${YELLOW}Creating virtual environment...\${NC}"
+    python -m venv venv
+fi
+
+# Activate virtual environment
+source venv/bin/activate
+
+# Install requirements
+echo -e "\${YELLOW}Installing dependencies...\${NC}"
+pip install -r requirements.txt
+
+# Generate a random secret key
+SECRET_KEY=\$(python -c "import secrets; print(secrets.token_hex(32))")
+JWT_SECRET_KEY=\$(python -c "import secrets; print(secrets.token_hex(32))")
+
+# Update .env file with secret keys
+sed -i'.bak' "s/SECRET_KEY=.*/SECRET_KEY=\$SECRET_KEY/" .env
+sed -i'.bak' "s/JWT_SECRET_KEY=.*/JWT_SECRET_KEY=\$JWT_SECRET_KEY/" .env
+
+# Create databases based on configuration
+DB_TYPE=\$(grep -oP 'DATABASE_TYPE=\K.*' .env)
+
+echo -e "\${YELLOW}Setting up \$DB_TYPE database...\${NC}"
+
+case \$DB_TYPE in
+    postgres)
+        if command -v psql &> /dev/null; then
+            # Extract database name from DATABASE_URL
+            DB_NAME=\$(grep -oP 'DATABASE_URL=.*?/\K[^?]*' .env)
+            
+            # Check if database exists
+            if ! psql -lqt | cut -d \| -f 1 | grep -qw \$DB_NAME; then
+                echo -e "\${YELLOW}Creating PostgreSQL database \$DB_NAME...\${NC}"
+                createdb \$DB_NAME || echo -e "\${RED}Failed to create database. You may need to create it manually.\${NC}"
+            else
+                echo -e "\${GREEN}PostgreSQL database \$DB_NAME already exists.\${NC}"
+            fi
+            
+            # Run migrations
+            echo -e "\${YELLOW}Running database migrations...\${NC}"
+            python -m alembic upgrade head
+        else
+            echo -e "\${RED}PostgreSQL client (psql) not found. Please install PostgreSQL or create the database manually.\${NC}"
+        fi
+        ;;
+    mongodb)
+        echo -e "\${YELLOW}Please ensure MongoDB is running at the URI specified in .env\${NC}"
+        echo -e "\${YELLOW}No additional setup needed for MongoDB.\${NC}"
+        ;;
+    *)
+        echo -e "\${GREEN}Using in-memory database. No additional setup needed.\${NC}"
+        ;;
+esac
+
+echo -e "\${GREEN}Setup completed successfully!\${NC}"
+echo -e "\${YELLOW}Run the application with: python run.py\${NC}"
+EOF
+chmod +x scripts/setup_project.sh
+
+# Create project management dashboard tools
+cat > scripts/project_dashboard.sh << EOF
+#!/bin/bash
+
+# Flask API Project Management Dashboard
+set -e
+
+# Color codes for output
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Check if dialog is installed
+if ! command -v dialog &> /dev/null; then
+    echo -e "\${RED}Dialog not found. Please install dialog to use this dashboard.\${NC}"
+    echo "On Ubuntu/Debian: sudo apt-get install dialog"
+    echo "On CentOS/RHEL: sudo yum install dialog"
+    echo "On macOS: brew install dialog"
+    exit 1
+fi
+
+# Get project information
+PROJECT_NAME=\$(grep -oP 'name="\K[^"]*' setup.py || echo "Flask API")
+VERSION=\$(grep -oP 'version="\K[^"]*' setup.py || echo "0.1.0")
+DB_TYPE=\$(grep -oP 'DATABASE_TYPE=\K.*' .env || echo "memory")
+
+# Function to display project status
+show_status() {
+    clear
+    echo -e "\${BLUE}======================================\${NC}"
+    echo -e "\${BLUE}      \$PROJECT_NAME Status (\$VERSION)     \${NC}"
+    echo -e "\${BLUE}======================================\${NC}"
+    echo
+    echo -e "\${YELLOW}Database Type:\${NC} \$DB_TYPE"
+    
+    # Check if virtual environment is activated
+    if [[ "\$VIRTUAL_ENV" != "" ]]; then
+        echo -e "\${YELLOW}Virtual Environment:\${NC} \${GREEN}Activated\${NC} (\$(basename \$VIRTUAL_ENV))"
+    else
+        echo -e "\${YELLOW}Virtual Environment:\${NC} \${RED}Not Activated\${NC}"
+    fi
+    
+    # Check dependencies
+    if [[ -f requirements.txt ]]; then
+        echo -e "\${YELLOW}Dependencies:\${NC} \$(wc -l < requirements.txt) packages required"
+    else
+        echo -e "\${YELLOW}Dependencies:\${NC} \${RED}requirements.txt not found\${NC}"
+    fi
+    
+    # Check for .env file
+    if [[ -f .env ]]; then
+        echo -e "\${YELLOW}Configuration:\${NC} \${GREEN}.env file found\${NC}"
+    else
+        echo -e "\${YELLOW}Configuration:\${NC} \${RED}.env file not found\${NC}"
+    fi
+    
+    # Database-specific checks
+    case \$DB_TYPE in
+        postgres)
+            # Check PostgreSQL connection
+            if grep -q "DATABASE_URL" .env; then
+                echo -e "\${YELLOW}PostgreSQL:\${NC} \${GREEN}Configured\${NC}"
+                
+                # Check for migrations
+                if [[ -d migrations/versions ]]; then
+                    MIGRATION_COUNT=\$(ls -1 migrations/versions | wc -l)
+                    echo -e "\${YELLOW}Migrations:\${NC} \$MIGRATION_COUNT migration(s) available"
+                else
+                    echo -e "\${YELLOW}Migrations:\${NC} \${RED}No migrations found\${NC}"
+                fi
+            else
+                echo -e "\${YELLOW}PostgreSQL:\${NC} \${RED}Not configured\${NC}"
+            fi
+            ;;
+        mongodb)
+            # Check MongoDB connection
+            if grep -q "MONGO_URI" .env; then
+                echo -e "\${YELLOW}MongoDB:\${NC} \${GREEN}Configured\${NC}"
+            else
+                echo -e "\${YELLOW}MongoDB:\${NC} \${RED}Not configured\${NC}"
+            fi
+            ;;
+        *)
+            echo -e "\${YELLOW}Database:\${NC} Using in-memory storage"
+            ;;
+    esac
+    
+    # Check for running server
+    PID=\$(pgrep -f "python run.py" || echo "")
+    if [[ "\$PID" != "" ]]; then
+        echo -e "\${YELLOW}Server Status:\${NC} \${GREEN}Running\${NC} (PID: \$PID)"
+    else
+        echo -e "\${YELLOW}Server Status:\${NC} \${RED}Not Running\${NC}"
+    fi
+    
+    echo
+    echo -e "Press any key to return to the menu..."
+    read -n 1
+}
+
+# Function to run tests
+run_tests() {
+    clear
+    echo -e "\${BLUE}Running tests...\${NC}"
+    
+    if [[ -d "tests" ]]; then
+        python -m pytest tests -v
+    else
+        echo -e "\${RED}Test directory not found.\${NC}"
+    fi
+    
+    echo
+    echo -e "Press any key to return to the menu..."
+    read -n 1
+}
+
+# Main dashboard loop
+while true; do
+    OPTION=\$(dialog --clear --backtitle "Flask API Project Dashboard" \
+        --title "[ \$PROJECT_NAME v\$VERSION ]" \
+        --menu "Choose an option:" 15 60 8 \
+        1 "View Project Status" \
+        2 "Start Development Server" \
+        3 "Setup Project" \
+        4 "Change Database Type" \
+        5 "Run Migrations" \
+        6 "Run Tests" \
+        7 "Check API Health" \
+        8 "Exit" \
+        2>&1 >/dev/tty)
+    
+    case \$OPTION in
+        1)
+            show_status
+            ;;
+        2)
+            clear
+            echo -e "\${BLUE}Starting development server...\${NC}"
+            python run.py
+            echo -e "Press any key to return to the menu..."
+            read -n 1
+            ;;
+        3)
+            clear
+            echo -e "\${BLUE}Setting up project...\${NC}"
+            ./scripts/setup_project.sh
+            echo -e "Press any key to return to the menu..."
+            read -n 1
+            ;;
+        4)
+            DB_CHOICE=\$(dialog --clear --backtitle "Flask API Project Dashboard" \
+                --title "[ Change Database Type ]" \
+                --menu "Select database type:" 12 50 3 \
+                1 "In-Memory (default)" \
+                2 "PostgreSQL" \
+                3 "MongoDB" \
+                2>&1 >/dev/tty)
+            
+            case \$DB_CHOICE in
+                1) ./scripts/set_database.sh memory ;;
+                2) ./scripts/set_database.sh postgres ;;
+                3) ./scripts/set_database.sh mongodb ;;
+                *) continue ;;
+            esac
+            
+            # Update DB_TYPE variable
+            DB_TYPE=\$(grep -oP 'DATABASE_TYPE=\K.*' .env || echo "memory")
+            
+            echo -e "Press any key to return to the menu..."
+            read -n 1
+            ;;
+        5)
+            clear
+            if [[ "\$DB_TYPE" == "postgres" ]]; then
+                echo -e "\${BLUE}Running database migrations...\${NC}"
+                python -m alembic upgrade head
+            else
+                echo -e "\${RED}Migrations are only available for PostgreSQL.\${NC}"
+            fi
+            echo -e "Press any key to return to the menu..."
+            read -n 1
+            ;;
+        6)
+            run_tests
+            ;;
+        7)
+            clear
+            echo -e "\${BLUE}Checking API health...\${NC}"
+            ./scripts/health_check.sh
+            echo -e "Press any key to return to the menu..."
+            read -n 1
+            ;;
+        8)
+            clear
+            echo -e "\${GREEN}Exiting dashboard. Goodbye!\${NC}"
+            exit 0
+            ;;
+        *)
+            continue
+            ;;
+    esac
+done
+EOF
+chmod +x scripts/project_dashboard.sh
+
+# Create deployment guide
+cat > docs/deployment_guide.md << EOF
+# Deployment Guide
+
+This guide provides instructions for deploying the Flask API to various environments.
+
+## Prerequisites
+
+- Python 3.8+
+- PostgreSQL and/or MongoDB (based on your configuration)
+- A Unix-like environment (Linux, macOS)
+
+## Preparing for Deployment
+
+1. Update the configuration in \`.env\` file:
+   - Set \`FLASK_ENV=production\`
+   - Set a strong \`SECRET_KEY\` and \`JWT_SECRET_KEY\`
+   - Configure database details
+
+2. Install production dependencies:
+   ```bash
+   pip install gunicorn
+   ```
+
+## Deployment Options
+
+### 1. Traditional Server Deployment
+
+#### Setup with Gunicorn and Nginx
+
+1. Install Gunicorn and Nginx:
+   ```bash
+   # Ubuntu/Debian
+   sudo apt-get update
+   sudo apt-get install nginx
+   ```
+
+2. Create a systemd service file:
+   ```bash
+   sudo nano /etc/systemd/system/flaskapi.service
+   ```
+
+3. Add the following content:
+   ```
+   [Unit]
+   Description=Flask API Service
+   After=network.target
+
+   [Service]
+   User=username
+   WorkingDirectory=/path/to/your/project
+   Environment="PATH=/path/to/your/venv/bin"
+   ExecStart=/path/to/your/venv/bin/gunicorn -b 127.0.0.1:8000 -w 4 "run:app"
+   Restart=always
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+4. Configure Nginx:
+   ```bash
+   sudo nano /etc/nginx/sites-available/flaskapi
+   ```
+
+5. Add the following content:
+   ```
+   server {
+       listen 80;
+       server_name your_domain.com;
+
+       location / {
+           proxy_pass http://127.0.0.1:8000;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+       }
+   }
+   ```
+
+6. Enable the site and restart services:
+   ```bash
+   sudo ln -s /etc/nginx/sites-available/flaskapi /etc/nginx/
