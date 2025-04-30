@@ -3,6 +3,7 @@ import os
 import shutil
 from pathlib import Path
 import json
+import sys
 
 class TemplateAssembler:
     """
@@ -99,6 +100,20 @@ class TemplateAssembler:
         
         # Process any merge files
         self._process_merge_files(project_dir)
+        
+        # Make script files executable
+        self._make_scripts_executable(project_dir)
+    
+    def _make_scripts_executable(self, project_dir):
+        """
+        Make script files executable (Unix systems only).
+        
+        Args:
+            project_dir (Path): Project directory
+        """
+        if sys.platform != 'win32':
+            for script_file in project_dir.glob('**/*.sh'):
+                script_file.chmod(script_file.stat().st_mode | 0o111)
     
     def _process_merge_files(self, project_dir):
         """
@@ -112,13 +127,13 @@ class TemplateAssembler:
             
             # Read merge instructions and content
             try:
-                with open(merge_file, 'r') as f:
+                with open(merge_file, 'r', encoding='utf-8') as f:
                     merge_data = json.load(f)
                 
                 # If target file exists, read it first
                 existing_content = ""
                 if target_file.exists():
-                    with open(target_file, 'r') as f:
+                    with open(target_file, 'r', encoding='utf-8') as f:
                         existing_content = f.read()
                 
                 # Process merge operations
@@ -129,14 +144,19 @@ class TemplateAssembler:
                     elif op['type'] == 'prepend':
                         final_content = op['content'] + final_content
                     elif op['type'] == 'replace':
-                        final_content = final_content.replace(op['target'], op['content'])
+                        if op['target'] in final_content:
+                            final_content = final_content.replace(op['target'], op['content'])
+                        else:
+                            print(f"Warning: Target '{op['target']}' not found in {target_file}")
                     elif op['type'] == 'insert_after':
                         if op['target'] in final_content:
                             final_content = final_content.replace(op['target'], 
                                                                  op['target'] + op['content'])
+                        else:
+                            print(f"Warning: Target '{op['target']}' not found in {target_file}")
                 
                 # Write the merged content back
-                with open(target_file, 'w') as f:
+                with open(target_file, 'w', encoding='utf-8') as f:
                     f.write(final_content)
                 
                 # Remove the merge file
@@ -165,6 +185,9 @@ class TemplateAssembler:
             
             # Skip if .merge file - we'll process those separately
             if item.suffix == '.merge':
+                # Make sure parent directories exist
+                target_path.parent.mkdir(exist_ok=True, parents=True)
+                shutil.copy2(item, target_path)
                 continue
                 
             if item.is_dir():
@@ -209,7 +232,7 @@ class TemplateAssembler:
         for path in project_dir.glob('**/*'):
             if path.is_file() and self._is_text_file(path):
                 try:
-                    content = path.read_text()
+                    content = path.read_text(encoding='utf-8')
                     modified = False
                     
                     for key, value in replacements.items():
@@ -219,7 +242,7 @@ class TemplateAssembler:
                             modified = True
                     
                     if modified:
-                        path.write_text(content)
+                        path.write_text(content, encoding='utf-8')
                 except Exception as e:
                     print(f"Warning: Could not process file {path}: {e}")
     
@@ -228,6 +251,6 @@ class TemplateAssembler:
         text_extensions = [
             '.py', '.md', '.txt', '.html', '.css', '.js', '.json',
             '.yml', '.yaml', '.env', '.sh', '.bat', '.rst', '.toml',
-            '.ini', '.cfg', '.conf', '.gitignore'
+            '.ini', '.cfg', '.conf', '.gitignore', '.ps1'
         ]
         return path.suffix.lower() in text_extensions
