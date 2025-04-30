@@ -1,30 +1,62 @@
+# Windows Installer for Flaskify
 $installDir = "$env:USERPROFILE\.flaskify"
 $binDir = "$env:LOCALAPPDATA\Microsoft\WindowsApps"
+$repoUrl = "https://github.com/DonArtkins/flaskify.git"
+$branch = "master"
 
-# Create installation directory
-New-Item -ItemType Directory -Force -Path $installDir
-
-# Download template
+# Check for Git
 try {
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/DonArtkins/flaskify/master/flaskify-template.sh" -OutFile "$installDir\template.sh" -ErrorAction Stop
+    git --version | Out-Null
 } catch {
-    Write-Error "Failed to download template: $($_.Exception.Message)"
+    Write-Host "Error: Git is required but not installed. Please install Git first." -ForegroundColor Red
     exit 1
 }
 
-# Create flaskify.cmd
+# Create installation directory
+New-Item -ItemType Directory -Force -Path $installDir | Out-Null
+
+# Clone the repository
+Write-Host "Cloning Flaskify repository..."
+if (Test-Path "$installDir\.git") {
+    # Already a git repo, just pull latest changes
+    try {
+        Set-Location $installDir
+        git pull
+    } catch {
+        Write-Host "Failed to update existing repository. Attempting to re-clone..." -ForegroundColor Yellow
+        Remove-Item -Recurse -Force "$installDir\*" -ErrorAction SilentlyContinue
+        git clone --depth=1 -b $branch $repoUrl $installDir
+    }
+} else {
+    # Fresh clone
+    Remove-Item -Recurse -Force "$installDir\*" -ErrorAction SilentlyContinue
+    git clone --depth=1 -b $branch $repoUrl $installDir
+}
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Failed to clone repository. Please check your internet connection and try again." -ForegroundColor Red
+    exit 1
+}
+
+# Install Python dependencies
+Write-Host "Installing Python dependencies..."
+try {
+    Set-Location $installDir
+    pip install -r requirements.txt
+    
+    # Install package in development mode
+    pip install -e .
+} catch {
+    Write-Host "Failed to install Python dependencies: $_" -ForegroundColor Red
+    exit 1
+}
+
+# Create flaskify.cmd in Windows Apps directory
 @"
 @echo off
-IF "%1"=="create" (
-    IF "%2"=="" (
-        echo Usage: flaskify create ^<project-name^>
-    ) ELSE (
-        bash %USERPROFILE%\.flaskify\template.sh %2
-    )
-) ELSE (
-    echo Usage: flaskify create ^<project-name^>
-)
-"@ | Out-File -FilePath "$binDir\flaskify.cmd" -Encoding ASCII
+python -m flaskify.cli %*
+"@ | Out-File -FilePath "$binDir\flaskify.cmd" -Encoding ASCII -Force
 
-Write-Host "Flaskify installed successfully! 🚀"
-Write-Host "Run 'flaskify create <project-name>' to create a new API project"
+Write-Host "Flaskify installed successfully! 🚀" -ForegroundColor Green
+Write-Host "Run 'flaskify create <project-name>' to create a new API project"  
+Write-Host "Run 'flaskify info' to see available templates and options"
