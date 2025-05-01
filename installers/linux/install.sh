@@ -51,6 +51,17 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# Create proper package structure (NEW STEP)
+echo -e "${GREEN}Setting up package structure...${NC}"
+mkdir -p "$INSTALL_DIR/flaskify"
+touch "$INSTALL_DIR/flaskify/__init__.py"
+
+# Move cli directory into flaskify if it's not already there
+if [ -d "$INSTALL_DIR/cli" ] && [ ! -d "$INSTALL_DIR/flaskify/cli" ]; then
+    cp -r "$INSTALL_DIR/cli" "$INSTALL_DIR/flaskify/"
+    touch "$INSTALL_DIR/flaskify/cli/__init__.py"
+fi
+
 # Create a virtual environment within the Flaskify installation
 echo -e "${GREEN}Setting up Flaskify environment...${NC}"
 silent_output python3 -m venv "$INSTALL_DIR/venv"

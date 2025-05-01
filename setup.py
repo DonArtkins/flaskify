@@ -16,5 +16,8 @@ setup(
             'flaskify=flaskify.cli:cli',
         ],
     },
+    package_data={
+        'flaskify': ['templates/**/*'],
+    },
     python_requires='>=3.7',
 )
